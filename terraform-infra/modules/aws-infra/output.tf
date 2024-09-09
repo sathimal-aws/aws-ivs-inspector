@@ -1,6 +1,6 @@
 # outputs
 output "rest_api_id" {
-  value = aws_api_gateway_deployment.deployment.rest_api_id
+  value = aws_api_gateway_deployment.deployment_authorizer.rest_api_id
 }
 
 output "get_session_events_api_id" {
