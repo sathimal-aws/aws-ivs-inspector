@@ -5,7 +5,7 @@ on: workflow_dispatch
   #   branches:
   #     - main
 env:
-  TF_VAR_region: "us-west-2"
+  TF_VAR_region: "ap-south-1"
   TF_VAR_project_name: ${{ vars.IVS_PROJECT_NAME }}
   TF_VAR_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
