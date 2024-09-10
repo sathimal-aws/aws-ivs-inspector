@@ -4,7 +4,7 @@ resource "aws_lambda_permission" "apigw_execute_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda_function[each.key].function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.rest_api_authorizer.execution_arn}/*"
+  source_arn    = "${aws_api_gateway_rest_api.rest_api.execution_arn}/*"
 }
 
 # ApiGateway websock api execution permission to Lambda
