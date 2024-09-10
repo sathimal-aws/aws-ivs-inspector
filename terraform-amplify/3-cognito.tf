@@ -91,9 +91,15 @@ resource "aws_cognito_user_pool" "user_pool" {
 
 # Cognito User Pool Client
 resource "aws_cognito_user_pool_client" "user_pool_client" {
-  name                         = var.user_pool_client_name
-  user_pool_id                 = aws_cognito_user_pool.user_pool.id
-  supported_identity_providers = ["COGNITO"]
+  name                                 = var.user_pool_client_name
+  user_pool_id                         = aws_cognito_user_pool.user_pool.id
+  supported_identity_providers         = ["COGNITO"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code", "implicit"]
+  allowed_oauth_scopes                 = ["aws.cognito.signin.user.admin"]
+  explicit_auth_flows                  = ["ADMIN_NO_SRP_AUTH", "USER_PASSWORD_AUTH"]
+  callback_urls                        = ["https://main.d1isu1tzgj0r1c.amplifyapp.com/#/"]
+  prevent_user_existence_errors        = "ENABLED"
 }
 
 # Cognito Identity Pool

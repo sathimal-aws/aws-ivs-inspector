@@ -1,10 +1,12 @@
-# # authorize api requests
-# resource "aws_api_gateway_authorizer" "authorizer" {
-#   name                   = "${var.project_name}-request-authorizer"
-#   rest_api_id            = aws_api_gateway_rest_api.rest_api.id
-#   authorizer_uri         = aws_lambda_function.lambda_function["user-authorizer"].invoke_arn
-#   authorizer_credentials = aws_iam_role.iam_role["api-gateway-auth-invocation"].arn
-# }
+# authorize api requests
+resource "aws_api_gateway_authorizer" "authorizer" {
+  name          = "${var.project_name}-request-authorizer"
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  type          = "COGNITO_USER_POOLS"
+  provider_arns = ["arn:aws:cognito-idp:us-east-2:740024244647:userpool/us-east-2_3Fng4WsOw"]
+  #   authorizer_uri         = aws_lambda_function.lambda_function["user-authorizer"].invoke_arn
+  #   authorizer_credentials = aws_iam_role.iam_role["api-gateway-auth-invocation"].arn
+}
 
 # create api
 resource "aws_api_gateway_rest_api" "rest_api" {
@@ -29,7 +31,8 @@ resource "aws_api_gateway_method" "method" {
   rest_api_id   = aws_api_gateway_rest_api.rest_api.id
   resource_id   = aws_api_gateway_resource.resource[each.key].id
   http_method   = each.value.http_method
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.authorizer.id
 }
 
 # integrate with Lambda
