@@ -1,3 +1,11 @@
+# authorize api requests
+resource "aws_api_gateway_authorizer" "authorizer" {
+  name                   = "${var.project_name}-request-authorizer"
+  rest_api_id            = aws_api_gateway_rest_api.rest_api.id
+  authorizer_uri         = aws_lambda_function.lambda_function["user-authorizer"].invoke_arn
+  authorizer_credentials = aws_iam_role.iam_role["api-gateway-auth-invocation"].arn
+}
+
 # create api
 resource "aws_api_gateway_rest_api" "rest_api" {
   name        = "${var.project_name}-rest-api"
