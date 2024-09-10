@@ -93,6 +93,7 @@ resource "aws_api_gateway_deployment" "deployment" {
   description = "Deployed at ${timestamp()}"
 
   depends_on = [
+    aws_api_gateway_authorizer.authorizer,
     aws_api_gateway_method.method,
     aws_api_gateway_method_response.method_response,
     aws_api_gateway_integration.integration,
