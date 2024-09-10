@@ -9,18 +9,14 @@ import routes from "./routes";
 
 // - AMPLIFY -
 import { Amplify } from "aws-amplify";
-import { fetchUserAttributes, fetchAuthSession } from "aws-amplify/auth";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { AmplifyConfig } from "../config/amplify-config"; // NO TOUCHY
+import stores from "src/stores";
 Amplify.configure(AmplifyConfig);
 
 console.log(Amplify.getConfig());
 
-// fetchUserAttributes().then((res) =>
-//   console.log("fetch User Attributes: ", res)
-// );
-// fetchAuthSession().then((res) => console.log("fetch auth session: ", res));
-
-export default route(function (/* { store, ssrContext } */) {
+export default route(function ({ store, ssrContext }) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === "history"
@@ -31,6 +27,30 @@ export default route(function (/* { store, ssrContext } */) {
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
     history: createHistory(process.env.VUE_ROUTER_BASE),
+  });
+
+  Router.beforeResolve((to, from, next) => {
+    const authStore = stores;
+    console.log("authStore:", authStore);
+
+    if (to.meta.auth) {
+      console.log("this route is protected!");
+
+      fetchAuthSession()
+        .then((res) => {
+          if (res.credentials) {
+            console.log("accessToken:", res.tokens?.idToken?.toString());
+            // authStore.accessToken = res.tokens?.idToken?.toString();
+            next();
+          }
+        })
+        .catch(() => {
+          console.log("User is not authenticated");
+          next({
+            path: "/auth",
+          });
+        });
+    } else next();
   });
 
   return Router;
