@@ -10,7 +10,11 @@ variable "project_name" {
   type = string
 }
 
-variable "cognito_id" {
+variable "cognito_user_pool_id" {
+  type = string
+}
+
+variable "cognito_identity_pool_id" {
   type = string
 }
 

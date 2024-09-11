@@ -3,7 +3,7 @@ resource "aws_api_gateway_authorizer" "authorizer" {
   name          = "${var.project_name}-request-authorizer"
   rest_api_id   = aws_api_gateway_rest_api.rest_api.id
   type          = "COGNITO_USER_POOLS"
-  provider_arns = ["arn:aws:cognito-idp:${var.cognito_region}:${var.account_id}:userpool/${var.cognito_id}"]
+  provider_arns = ["arn:aws:cognito-idp:${var.cognito_region}:${var.account_id}:userpool/${var.cognito_user_pool_id}"]
 }
 
 # create api
