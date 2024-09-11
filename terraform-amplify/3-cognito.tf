@@ -98,8 +98,9 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_scopes                 = ["aws.cognito.signin.user.admin"]
   explicit_auth_flows                  = ["ADMIN_NO_SRP_AUTH", "USER_PASSWORD_AUTH"]
-  # callback_urls                        = [""]
-  prevent_user_existence_errors = "ENABLED"
+  callback_urls                        = ["https://main.${aws_amplify_app.app.id}.amplifyapp.com"]
+  prevent_user_existence_errors        = "ENABLED"
+  depends_on                           = [aws_amplify_app.app]
 }
 
 # Cognito Identity Pool
