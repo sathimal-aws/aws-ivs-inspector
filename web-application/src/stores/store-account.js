@@ -21,7 +21,7 @@ export const useAccountStore = defineStore("AccountStore", {
       );
 
       try {
-        // console.log(ivsRegion);
+        console.log(commonStore.access_token);
         const response = await api.get(
           `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-metrics`,
           {
@@ -30,6 +30,11 @@ export const useAccountStore = defineStore("AccountStore", {
             },
             headers: {
               Authorization: `Bearer ${commonStore.access_token}`,
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods":
+                "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+              "Access-Control-Allow-Headers":
+                "Origin, Content-Type, X-Auth-Token",
             },
           }
         );
