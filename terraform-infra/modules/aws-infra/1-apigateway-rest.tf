@@ -54,7 +54,7 @@ resource "aws_api_gateway_integration" "integration" {
   resource_id             = aws_api_gateway_resource.resource[each.key].id
   http_method             = aws_api_gateway_method.method[each.key].http_method
   integration_http_method = "POST"
-  type                    = "AWS"
+  type                    = "AWS_PROXY"
   timeout_milliseconds    = 29000
   uri                     = aws_lambda_function.lambda_function[each.key].invoke_arn
   depends_on = [
