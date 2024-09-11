@@ -45,6 +45,7 @@ resource "aws_api_gateway_integration" "integration" {
   uri                     = aws_lambda_function.lambda_function[each.key].invoke_arn
   depends_on = [
     aws_api_gateway_method.method,
+    aws_api_gateway_authorizer.authorizer,
     aws_lambda_function.lambda_function
   ]
 }
@@ -58,6 +59,7 @@ resource "aws_api_gateway_integration_response" "integration_response" {
   status_code = aws_api_gateway_method_response.method_response[each.key].status_code
   depends_on = [
     aws_api_gateway_method.method,
+    aws_api_gateway_authorizer.authorizer,
     aws_api_gateway_integration.integration
   ]
 }
@@ -76,6 +78,7 @@ resource "aws_api_gateway_method_response" "method_response" {
   }
   depends_on = [
     aws_api_gateway_method.method,
+    aws_api_gateway_authorizer.authorizer,
     aws_api_gateway_integration.integration
   ]
 }
