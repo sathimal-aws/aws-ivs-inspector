@@ -38,7 +38,7 @@ export default route(function ({ store }) {
       fetchAuthSession()
         .then((res) => {
           if (res.credentials) {
-            console.log("accessToken:", res.tokens?.idToken?.toString());
+            // console.log("accessToken:", res.tokens?.idToken?.toString());
             commonStore.access_token = res.tokens?.idToken?.toString();
             next();
           }

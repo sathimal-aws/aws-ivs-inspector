@@ -86,13 +86,13 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
   resource_id = aws_api_gateway_resource.resource[each.key].id
   http_method = aws_api_gateway_method.options_method[each.key].http_method
-  status_code = aws_api_gateway_method_response.options_200[each.key].status_code
+  status_code = aws_api_gateway_method_response.options_method_response[each.key].status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
-  depends_on = [aws_api_gateway_method_response.options_200]
+  depends_on = [aws_api_gateway_method_response.options_method_response]
 }
 
 # method response from Lambda that passes back to Client application
@@ -115,7 +115,7 @@ resource "aws_api_gateway_method_response" "method_response" {
   ]
 }
 
-resource "aws_api_gateway_method_response" "options_200" {
+resource "aws_api_gateway_method_response" "options_method_response" {
   for_each    = { for api in var.rest_apis : api.name => api }
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
   resource_id = aws_api_gateway_resource.resource[each.key].id
