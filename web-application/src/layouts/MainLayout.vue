@@ -224,7 +224,7 @@ export default defineComponent({
     };
 
     onMounted(async () => {
-      // await authStore.isUserSignedIn().then((res) => console.log(res));
+      await authStore.isUserSignedIn().then((res) => console.log(res));
     });
 
     return {

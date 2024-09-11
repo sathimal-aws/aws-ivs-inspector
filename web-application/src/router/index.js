@@ -29,29 +29,30 @@ export default route(function ({ store, ssrContext }) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  Router.beforeResolve((to, from, next) => {
-    const authStore = stores;
-    console.log("authStore:", authStore);
+  // Router.beforeResolve((to, from, next) => {
+  //   // const authStore = stores;
+  //   console.log("authStore:", store);
 
-    if (to.meta.auth) {
-      console.log("this route is protected!");
+  //   if (to.meta.auth) {
+  //     console.log("this route is protected!", to.fullPath);
 
-      fetchAuthSession()
-        .then((res) => {
-          if (res.credentials) {
-            console.log("accessToken:", res.tokens?.idToken?.toString());
-            // authStore.accessToken = res.tokens?.idToken?.toString();
-            next();
-          }
-        })
-        .catch(() => {
-          console.log("User is not authenticated");
-          next({
-            path: "/auth",
-          });
-        });
-    } else next();
-  });
+  //     fetchAuthSession()
+  //       .then((res) => {
+  //         console.log("fetchAuthSession response:", res);
+
+  //         if (res.credentials) {
+  //           console.log("accessToken:", res.tokens?.idToken?.toString());
+  //           // authStore.accessToken = res.tokens?.idToken?.toString();
+  //           next();
+  //         }
+  //       })
+  //       .catch(() => {
+  //         console.log("User is not authenticated");
+  //         next({ name: "Auth" });
+  //         // next();
+  //       });
+  //   } else next();
+  // });
 
   return Router;
 });

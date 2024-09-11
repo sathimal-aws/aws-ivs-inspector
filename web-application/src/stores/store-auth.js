@@ -20,7 +20,6 @@ export const useAuthStore = defineStore("AuthStore", {
     userSignedIn: false,
     userState: null,
     user: null,
-    accessToken: null,
   }),
 
   actions: {
@@ -29,13 +28,20 @@ export const useAuthStore = defineStore("AuthStore", {
         await getCurrentUser().then(async (userRes) => {
           console.log("user Response:", userRes);
           this.user = userRes;
+          if (userRes.userId) {
+            const session = await fetchAuthSession();
+            console.log("session:", session.tokens?.idToken?.toString());
+            // await fetchAuthSession().then((fetchAuthSessionRes) => {
+            //   console.log("fetchAuthSessionRes:", fetchAuthSessionRes);
+            // });
+          }
         });
         return true;
       } catch (err) {
         console.log("err: ", err);
-        this.router.push({
-          name: "Auth",
-        });
+        // this.router.push({
+        //   name: "Auth",
+        // });
         return err;
       }
       // return fetchAuthSession()

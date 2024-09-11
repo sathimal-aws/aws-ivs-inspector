@@ -49,12 +49,8 @@ export default defineComponent({
     };
 
     watch(user, (currentValue, oldValue) => {
-      // console.log("currentValue:", currentValue);
-      // console.log("oldValue:", oldValue);
-      // console.log("router:", $router);
+      console.log("currentValue:", currentValue);
       console.log("route:", $route.name);
-      console.log("user:", user.value);
-      // console.log("redirect:", $route.query.redirect);
 
       if (currentValue?.userId) {
         authStore.setUserState(currentValue);
@@ -73,6 +69,79 @@ export default defineComponent({
   },
 });
 </script>
+
+<!-- <script>
+import { defineComponent, onMounted, toRefs, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { fetchUserAttributes } from "aws-amplify/auth";
+import { Authenticator, useAuthenticator } from "@aws-amplify/ui-vue";
+import { useCommonStore } from "src/stores/store-common";
+import { useAuthStore } from "src/stores/store-auth";
+import "@aws-amplify/ui-vue/styles.css";
+
+export default defineComponent({
+  name: "UserAuthentication",
+  components: { Authenticator },
+  setup() {
+    const commonStore = useCommonStore();
+    const authStore = useAuthStore();
+    const { route, user, auth } = toRefs(useAuthenticator());
+    const $router = useRouter();
+    const $route = useRoute();
+
+    const formFields = {
+      signUp: {
+        given_name: {
+          order: 1,
+        },
+        family_name: {
+          order: 2,
+        },
+        email: {
+          order: 3,
+        },
+        password: {
+          order: 4,
+        },
+        confirm_password: {
+          order: 5,
+        },
+      },
+    };
+
+    // watch(user, (currentValue, oldValue) => {
+    //   console.log("currentValue:", currentValue);
+    //   console.log("route:", $route.name);
+
+    //   if (currentValue?.userId) {
+    //     authStore.setUserState(currentValue);
+    //     const params = {
+    //       account_id: commonStore.account_id,
+    //       region: commonStore.regions[0],
+    //     };
+    //     $router.push({ name: "Dashboard", params: params });
+    //   }
+    // });
+
+    onMounted(() => {
+      console.log("at auth");
+      fetchUserAttributes().then((res) => {
+        console.log("fetch User Attributes: ", res);
+        if (!res.email) {
+          $router.push({
+            name: "Auth",
+          });
+        }
+      });
+    });
+
+    return {
+      auth,
+      formFields,
+    };
+  },
+});
+</script> -->
 
 <style>
 .amplify-button--primary {
