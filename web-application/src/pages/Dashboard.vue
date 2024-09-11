@@ -151,7 +151,7 @@ export default defineComponent({
 
     const metrics = computed(() => {
       var metricsManipulation = accountStore.metrics[ivsRegion];
-      console.log(metricsManipulation);
+      // console.log(metricsManipulation);
       // const ConcurrentViews = metricsManipulation?.[0]?.["Datapoints"].sort(
       //   (x, y) =>
       //     new Date(y.Timestamp).getTime() - new Date(x.Timestamp).getTime()

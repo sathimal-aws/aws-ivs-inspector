@@ -10,6 +10,14 @@ variable "project_name" {
   type = string
 }
 
+variable "cognito_id" {
+  type = string
+}
+
+variable "cognito_region" {
+  type = string
+}
+
 variable "environment" {
   type    = string
   default = "ivs"

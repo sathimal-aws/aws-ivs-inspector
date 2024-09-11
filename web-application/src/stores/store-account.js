@@ -7,8 +7,8 @@ const commonStore = useCommonStore();
 
 const envVars = import.meta.env;
 
-const token =
-  "eyJraWQiOiJ1QVRpcFRHVjVsbUdGRWNtajZ2anJcLzRoeUZmQTFzMERaNDdFeXAwZ01Cbz0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI4MThiODU4MC03MDAxLTcwMzUtM2QzNC1kMmU0OTZjMmFiMGIiLCJjb2duaXRvOmdyb3VwcyI6WyJBZG1pbiJdLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiY29nbml0bzpwcmVmZXJyZWRfcm9sZSI6ImFybjphd3M6aWFtOjo3NDAwMjQyNDQ2NDc6cm9sZVwvaXZzLWluc3BlY3RvclwvaXZzLWluc3BlY3Rvci1jb2duaXRvX2FkbWluX2dyb3VwX3Jlc3RyaWN0ZWRfYWNjZXNzIiwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMi5hbWF6b25hd3MuY29tXC91cy1lYXN0LTJfM0ZuZzRXc093IiwiY29nbml0bzp1c2VybmFtZSI6ImRlbW8iLCJnaXZlbl9uYW1lIjoibXkgbmFtZSIsIm9yaWdpbl9qdGkiOiJkNGJkMjM1Ni0yZGRmLTQxN2EtYWY2OC1mNTA5NGE3MzQ4ZGQiLCJjb2duaXRvOnJvbGVzIjpbImFybjphd3M6aWFtOjo3NDAwMjQyNDQ2NDc6cm9sZVwvaXZzLWluc3BlY3RvclwvaXZzLWluc3BlY3Rvci1jb2duaXRvX2FkbWluX2dyb3VwX3Jlc3RyaWN0ZWRfYWNjZXNzIl0sImF1ZCI6IjU1ZjJpMjAydDlzZTNzZGRqZWRvYWNmdXU2IiwiZXZlbnRfaWQiOiJjZGYyMDIyZC0zN2FmLTQ3YmMtYWFkZC1lMjAxYWY4M2Y1ZTkiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTcyNjAwMzk5OSwiZXhwIjoxNzI2MDE1Mjc3LCJpYXQiOjE3MjYwMTE2NzcsImZhbWlseV9uYW1lIjoidGVzdCBmYW1pbHkgbmFtZSIsImp0aSI6IjIwYTVlNGNkLWExN2MtNGIzNi1iZWQxLTFkNDliYWQxZDliZiIsImVtYWlsIjoiZGVtb0BpdnMtaW5zcGVjdG9yLmNvbSJ9.r0rADgQdBt12xS50dOjxI_y_fpJxLAWzlY4A4bPrp-m81d041Rv7HO_1uC8wD864I6-C27qr0GqjJGVC6LqGQnL5VRhszC1ALM6uYVexYx15gfU2iPHdGyB300EmQpziCkzyaMC13lClmKG4L4PlDSamW_5MzUamBpp4I53BKy2CDjbWbXAk41v1aAGfHYCzIqMzJVxFtYtuSQduw5MEFzYY5rdLv9Wpafof1FRxVQuJ_NtBzCB_JqQ4tXlgHy0sQF3My24u9lgkXXG4DEwTqmBXe5-uh3CyJC8xQ24NagvIZhJXBeCQHPD-dNDIP0KCiZVYTvqMzhL45eMpbKXO9Q";
+// const token =
+//   "eyJraWQiOiJkbHNtS1hmYUtxd0tiTHZLR3V4Z0pZUXdPVlo0Y2h0dnBzRDR1TnFYeXRnPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJkMTFiMDUxMC0xMDExLTcwNmEtMjI4Zi1jOWJlMTU5ODc4OGYiLCJjb2duaXRvOmdyb3VwcyI6WyJTdHJlYW1lcnMiLCJBZG1pbiJdLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMi5hbWF6b25hd3MuY29tXC91cy1lYXN0LTJfbHBRWFN3YVJzIiwiY29nbml0bzp1c2VybmFtZSI6ImFkbWluIiwiZ2l2ZW5fbmFtZSI6Iml2cyBpbnNwZWN0b3IiLCJvcmlnaW5fanRpIjoiYmI0MmJkMWQtYjRkZC00NDE4LTkwZTQtNDQ0ZjcwNzA1NGZhIiwiY29nbml0bzpyb2xlcyI6WyJhcm46YXdzOmlhbTo6NzQwMDI0MjQ0NjQ3OnJvbGVcL2l2cy1tb25pdG9yXC9pdnMtbW9uaXRvci1jb2duaXRvX3N0YW5kYXJkX2dyb3VwX3Jlc3RyaWN0ZWRfYWNjZXNzIiwiYXJuOmF3czppYW06Ojc0MDAyNDI0NDY0Nzpyb2xlXC9pdnMtbW9uaXRvclwvaXZzLW1vbml0b3ItY29nbml0b19hZG1pbl9ncm91cF9yZXN0cmljdGVkX2FjY2VzcyJdLCJhdWQiOiIyMW1kbnVrZXR0Y2o0MzkwZWVzb2RhMHRpNyIsImV2ZW50X2lkIjoiYmFjYmIwZDQtNmJmNy00NTExLWI0NzctOTRjZjIwZDA0Y2ZlIiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE3MjYwNTU5OTUsImV4cCI6MTcyNjA1OTU5NSwiaWF0IjoxNzI2MDU1OTk1LCJmYW1pbHlfbmFtZSI6ImF3cyIsImp0aSI6IjA2ZjFkZmYzLWNmN2MtNDllYS1iMTU2LTFmNzM0ZTg0M2RiMCIsImVtYWlsIjoiYWRtaW5AaXZzLWluc3BlY3Rvci5jb20ifQ.htfd7DjjDvxAnHGsMo2PpfLEnPTcLiy-GLOC3iRD1LNVWYnQNvrCxForI_xNGqvDEgGq6kz53cvUb2V_1XHd5bI8_uWA655H2SU4TLODittBuLFNY-MZLUCPW2SR4Y_oKny75C2mAYg9AoOOHpH3Qct0sHS7pK7Qyp_MPTouvll-EDGtcFtq-YfLN2IK5oxxr3DxQlrq-g_RcpP-KKfJringnCyAnHk2_MmmrxCJ22q0xbFUYh_PetU2P7q7nK0_WNhjC86mNPvhcukFO5R0CiyW4LDpk1sBKG-kN3wcjEbkiS-pi8055p_LK5d4C2CO58sBa00HC-YhkvMZrvY8Ng";
 
 export const useAccountStore = defineStore("AccountStore", {
   state: () => ({
@@ -24,7 +24,7 @@ export const useAccountStore = defineStore("AccountStore", {
       );
 
       try {
-        console.log(ivsRegion);
+        // console.log(ivsRegion);
         const response = await api.get(
           `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-metrics`,
           {
@@ -32,7 +32,7 @@ export const useAccountStore = defineStore("AccountStore", {
               regionName: ivsRegion,
             },
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${commonStore.access_token}`,
             },
           }
         );
@@ -61,7 +61,7 @@ export const useAccountStore = defineStore("AccountStore", {
       );
 
       try {
-        console.log(serviceCode, ivsRegion);
+        // console.log(serviceCode, ivsRegion);
         const response = await api.get(
           `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-quotas`,
           {
@@ -70,7 +70,7 @@ export const useAccountStore = defineStore("AccountStore", {
               nextToken: this.quotasNextToken[ivsRegion] || "",
             },
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${commonStore.access_token}`,
             },
           }
         );

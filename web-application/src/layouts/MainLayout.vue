@@ -223,9 +223,9 @@ export default defineComponent({
         .then((userSignOutRes) => console.log(userSignOutRes));
     };
 
-    onMounted(async () => {
-      await authStore.isUserSignedIn().then((res) => console.log(res));
-    });
+    // onMounted(async () => {
+    //   await authStore.isUserSignedIn().then((res) => console.log(res));
+    // });
 
     return {
       user,

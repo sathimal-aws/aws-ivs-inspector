@@ -85,6 +85,7 @@ jobs:
           echo "cognito_ids:: ${{ needs.terraform_for_amplify.outputs.cognito_ids }}"
           echo "app_id:: ${{ needs.terraform_for_amplify.outputs.amplify_app_id }}"
           gh variable set AWS_AMPLIFY_APP_ID --body "${{ needs.terraform_for_amplify.outputs.amplify_app_id }}" --env ivs_inspector_backend
+          gh variable set AWS_COGNITO_ID --body "${{ needs.terraform_for_amplify.outputs.cognito_ids }}" --env ivs_inspector_backend
     outputs:
       amplify_app_id: ${{ needs.terraform_for_amplify.outputs.amplify_app_id }}
       cognito_ids: ${{ needs.terraform_for_amplify.outputs.cognito_ids }}
