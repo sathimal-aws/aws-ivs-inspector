@@ -27,66 +27,66 @@ resource "aws_cognito_user_pool" "user_pool" {
     require_uppercase = true
   }
 
-  # # General Schema
-  # dynamic "schema" {
-  #   for_each = var.schemas == null ? [] : var.schemas
-  #   content {
-  #     name                     = lookup(schema.value, "name")
-  #     attribute_data_type      = lookup(schema.value, "attribute_data_type")
-  #     required                 = lookup(schema.value, "required")
-  #     mutable                  = lookup(schema.value, "mutable")
-  #     developer_only_attribute = lookup(schema.value, "developer_only_attribute")
-  #   }
-  # }
+  # General Schema
+  dynamic "schema" {
+    for_each = var.schemas == null ? [] : var.schemas
+    content {
+      name                     = lookup(schema.value, "name")
+      attribute_data_type      = lookup(schema.value, "attribute_data_type")
+      required                 = lookup(schema.value, "required")
+      mutable                  = lookup(schema.value, "mutable")
+      developer_only_attribute = lookup(schema.value, "developer_only_attribute")
+    }
+  }
 
-  # # Schema (String)
-  # dynamic "schema" {
-  #   for_each = var.string_schemas == null ? [] : var.string_schemas
-  #   content {
-  #     name                     = lookup(schema.value, "name")
-  #     attribute_data_type      = lookup(schema.value, "attribute_data_type")
-  #     required                 = lookup(schema.value, "required")
-  #     mutable                  = lookup(schema.value, "mutable")
-  #     developer_only_attribute = lookup(schema.value, "developer_only_attribute")
+  # Schema (String)
+  dynamic "schema" {
+    for_each = var.string_schemas == null ? [] : var.string_schemas
+    content {
+      name                     = lookup(schema.value, "name")
+      attribute_data_type      = lookup(schema.value, "attribute_data_type")
+      required                 = lookup(schema.value, "required")
+      mutable                  = lookup(schema.value, "mutable")
+      developer_only_attribute = lookup(schema.value, "developer_only_attribute")
 
-  #     # string_attribute_constraints
-  #     dynamic "string_attribute_constraints" {
-  #       for_each = length(lookup(schema.value, "string_attribute_constraints")) == 0 ? [] : [lookup(schema.value, "string_attribute_constraints", {})]
-  #       content {
-  #         min_length = lookup(string_attribute_constraints.value, "min_length", 0)
-  #         max_length = lookup(string_attribute_constraints.value, "max_length", 0)
-  #       }
-  #     }
-  #   }
-  # }
+      # string_attribute_constraints
+      dynamic "string_attribute_constraints" {
+        for_each = length(lookup(schema.value, "string_attribute_constraints")) == 0 ? [] : [lookup(schema.value, "string_attribute_constraints", {})]
+        content {
+          min_length = lookup(string_attribute_constraints.value, "min_length", 0)
+          max_length = lookup(string_attribute_constraints.value, "max_length", 0)
+        }
+      }
+    }
+  }
 
-  # # Schema (Number)
-  # dynamic "schema" {
-  #   for_each = var.number_schemas == null ? [] : var.number_schemas
-  #   content {
-  #     name                     = lookup(schema.value, "name")
-  #     attribute_data_type      = lookup(schema.value, "attribute_data_type")
-  #     required                 = lookup(schema.value, "required")
-  #     mutable                  = lookup(schema.value, "mutable")
-  #     developer_only_attribute = lookup(schema.value, "developer_only_attribute")
+  # Schema (Number)
+  dynamic "schema" {
+    for_each = var.number_schemas == null ? [] : var.number_schemas
+    content {
+      name                     = lookup(schema.value, "name")
+      attribute_data_type      = lookup(schema.value, "attribute_data_type")
+      required                 = lookup(schema.value, "required")
+      mutable                  = lookup(schema.value, "mutable")
+      developer_only_attribute = lookup(schema.value, "developer_only_attribute")
 
-  #     # number_attribute_constraints
-  #     dynamic "number_attribute_constraints" {
-  #       for_each = length(lookup(schema.value, "number_attribute_constraints")) == 0 ? [] : [lookup(schema.value, "number_attribute_constraints", {})]
-  #       content {
-  #         min_value = lookup(number_attribute_constraints.value, "min_value", 0)
-  #         max_value = lookup(number_attribute_constraints.value, "max_value", 0)
-  #       }
-  #     }
-  #   }
-  # }
+      # number_attribute_constraints
+      dynamic "number_attribute_constraints" {
+        for_each = length(lookup(schema.value, "number_attribute_constraints")) == 0 ? [] : [lookup(schema.value, "number_attribute_constraints", {})]
+        content {
+          min_value = lookup(number_attribute_constraints.value, "min_value", 0)
+          max_value = lookup(number_attribute_constraints.value, "max_value", 0)
+        }
+      }
+    }
+  }
 
-  # tags = merge(
-  #   {
-  #     "AppName" = var.project_name
-  #   },
-  #   var.tags,
-  # )
+  tags = merge(
+    {
+      "AppName" = var.project_name
+    },
+    var.tags,
+  )
 }
 
 # Cognito User Pool Client
