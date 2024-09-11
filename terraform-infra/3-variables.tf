@@ -13,6 +13,21 @@ variable "project_name" {
   default = "ivs-inspector"
 }
 
+variable "cognito_user_pool_id" {
+  type    = string
+  default = null
+}
+
+variable "cognito_identity_pool_id" {
+  type    = string
+  default = null
+}
+
+variable "cognito_region" {
+  type    = string
+  default = null
+}
+
 variable "environment" {
   type    = string
   default = "ivs"
