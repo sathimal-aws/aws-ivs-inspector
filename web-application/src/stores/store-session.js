@@ -33,6 +33,9 @@ export const useSessionStore = defineStore("SessionStore", {
             params: {
               nextToken: this.streamsNextToken[ivsRegion] || "",
             },
+            headers: {
+              Authorization: `Bearer ${commonStore.access_token}`,
+            },
           }
         );
         console.log("getSessions response:", response);
@@ -86,6 +89,9 @@ export const useSessionStore = defineStore("SessionStore", {
               stream_id: streamId,
               channel_arn: channelArn,
             },
+            headers: {
+              Authorization: `Bearer ${commonStore.access_token}`,
+            },
           }
         );
 
@@ -123,6 +129,9 @@ export const useSessionStore = defineStore("SessionStore", {
           {
             params: {
               channelArn: channelArn,
+            },
+            headers: {
+              Authorization: `Bearer ${commonStore.access_token}`,
             },
           }
         );
@@ -164,6 +173,9 @@ export const useSessionStore = defineStore("SessionStore", {
             params: {
               stream_id: streamId,
               channel_id: channelId,
+            },
+            headers: {
+              Authorization: `Bearer ${commonStore.access_token}`,
             },
           }
         );

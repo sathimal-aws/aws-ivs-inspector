@@ -32,6 +32,9 @@ export const useChannelStore = defineStore("ChannelStore", {
             params: {
               nextToken: this.channelsNextToken[ivsRegion] || "",
             },
+            headers: {
+              Authorization: `Bearer ${commonStore.access_token}`,
+            },
           }
         );
         console.log("response:", response.data);
@@ -72,6 +75,9 @@ export const useChannelStore = defineStore("ChannelStore", {
           {
             params: {
               channelArn: channelArn,
+            },
+            headers: {
+              Authorization: `Bearer ${commonStore.access_token}`,
             },
           }
         );
@@ -124,6 +130,9 @@ export const useChannelStore = defineStore("ChannelStore", {
             params: {
               channelArn: channelArn,
               nextToken: this.sessionsNextToken[ivsRegion]?.[channelId] || "",
+            },
+            headers: {
+              Authorization: `Bearer ${commonStore.access_token}`,
             },
           }
         );
