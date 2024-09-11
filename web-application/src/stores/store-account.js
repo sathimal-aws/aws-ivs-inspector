@@ -21,7 +21,7 @@ export const useAccountStore = defineStore("AccountStore", {
       );
 
       try {
-        console.log(commonStore.access_token);
+        // console.log(commonStore.access_token);
         const response = await api.get(
           `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-metrics`,
           {
@@ -45,7 +45,7 @@ export const useAccountStore = defineStore("AccountStore", {
         }
         return true;
       } catch (error) {
-        console.log(error.message);
+        console.log("getMetrics err:", error);
         Notify.create({
           color: "negative",
           position: "top",
@@ -83,7 +83,7 @@ export const useAccountStore = defineStore("AccountStore", {
         }
         return true;
       } catch (error) {
-        console.log(error.message);
+        console.log("getQuotaProvisioned err:", error);
         Notify.create({
           color: "negative",
           position: "top",
