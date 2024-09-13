@@ -14,15 +14,18 @@ variable "project_name" {
 }
 
 variable "cognito_user_pool_id" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "cognito_identity_pool_id" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "cognito_region" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "environment" {
