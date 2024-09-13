@@ -1,11 +1,10 @@
 import { defineStore } from "pinia";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
-import { useCommonStore } from "./store-common";
+import { useAuthStore } from "./store-auth";
 
+const authStore = useAuthStore();
 const envVars = import.meta.env;
-
-const commonStore = useCommonStore();
 
 export const useChannelStore = defineStore("ChannelStore", {
   state: () => ({
@@ -19,13 +18,10 @@ export const useChannelStore = defineStore("ChannelStore", {
   actions: {
     async getChannels(ivsRegion) {
       try {
-        console.log("getting channel list", ivsRegion);
+        console.log("getting channel list:", ivsRegion);
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
         );
-
-        console.log(apis);
-
         const response = await api.get(
           `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/list-channels`,
           {
@@ -33,7 +29,7 @@ export const useChannelStore = defineStore("ChannelStore", {
               nextToken: this.channelsNextToken[ivsRegion] || "",
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );
@@ -77,7 +73,7 @@ export const useChannelStore = defineStore("ChannelStore", {
               channelArn: channelArn,
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );
@@ -132,7 +128,7 @@ export const useChannelStore = defineStore("ChannelStore", {
               nextToken: this.sessionsNextToken[ivsRegion]?.[channelId] || "",
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );

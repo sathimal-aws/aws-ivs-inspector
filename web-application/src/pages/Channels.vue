@@ -209,7 +209,7 @@ export default defineComponent({
     //     }
 
     const channels = computed(() => channelStore.channels[awsRegion]);
-    console.log("channels:", channels.value);
+    // console.log("channels:", channels.value);
     // const channelList = computed(() => Object.values(channels.value));
     const channelsNextToken = computed(
       () => channelStore.channelsNextToken[awsRegion]
@@ -315,7 +315,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      console.log(channels.value);
+      console.log("channels:", channels.value);
       if (
         !channels.value ||
         (channels.value && Object.keys(channels.value) < 2)

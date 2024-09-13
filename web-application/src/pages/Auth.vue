@@ -24,7 +24,7 @@ export default defineComponent({
   setup() {
     const commonStore = useCommonStore();
     const authStore = useAuthStore();
-    const { route, user, auth } = toRefs(useAuthenticator());
+    const { user } = toRefs(useAuthenticator());
     const $router = useRouter();
     const $route = useRoute();
 
@@ -49,21 +49,23 @@ export default defineComponent({
     };
 
     watch(user, (currentValue, oldValue) => {
-      console.log("currentValue:", currentValue);
-      console.log("route:", $route.name);
+      // console.log("currentValue:", currentValue);
+      console.log("route.query:", $route.query);
 
       if (currentValue?.userId) {
-        authStore.setUserState(currentValue);
+        authStore.setUser(currentValue);
         const params = {
-          account_id: commonStore.account_id,
-          region: commonStore.regions[0],
+          account_id: $route.query.account_id || commonStore.account_id,
+          region: $route.query.region || commonStore.regions[0],
         };
-        $router.push({ name: "Dashboard", params: params });
+        $router.push({
+          name: $route.query.redirect || "Dashboard",
+          params: params,
+        });
       }
     });
 
     return {
-      auth,
       formFields,
     };
   },
@@ -114,7 +116,7 @@ export default defineComponent({
     //   console.log("route:", $route.name);
 
     //   if (currentValue?.userId) {
-    //     authStore.setUserState(currentValue);
+    //     authStore.setUser(currentValue);
     //     const params = {
     //       account_id: commonStore.account_id,
     //       region: commonStore.regions[0],

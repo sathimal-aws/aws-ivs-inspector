@@ -218,14 +218,17 @@ export default defineComponent({
     };
 
     const signOutAndRedirectTo = () => {
-      authStore
-        .userSignOut()
-        .then((userSignOutRes) => console.log(userSignOutRes));
+      authStore.userSignOut().then((userSignOutRes) => {
+        console.log("userSignedOut", userSignOutRes);
+        if (userSignOutRes) {
+          $router.push({ name: "Auth" });
+        }
+      });
     };
 
-    // onMounted(async () => {
-    //   await authStore.isUserSignedIn().then((res) => console.log(res));
-    // });
+    onMounted(async () => {
+      // await authStore.isUserSignedIn().then((res) => console.log(res));
+    });
 
     return {
       user,

@@ -1,7 +1,9 @@
-import { store } from "quasar/wrappers";
 import { createPinia } from "pinia";
+import { createApp } from "vue";
+import App from "../App.vue";
 
-export default store((/* { ssrContext } */) => {
-  const pinia = createPinia();
-  return pinia;
-});
+const pinia = createPinia();
+const app = createApp(App);
+app.use(pinia);
+
+export default pinia;

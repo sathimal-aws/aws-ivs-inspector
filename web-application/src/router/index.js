@@ -6,16 +6,14 @@ import {
   createWebHashHistory,
 } from "vue-router";
 import routes from "./routes";
+import { useAuthStore } from "src/stores/store-auth";
 
 // - AMPLIFY -
 import { Amplify } from "aws-amplify";
-import { fetchAuthSession } from "aws-amplify/auth";
 import { AmplifyConfig } from "../config/amplify-config"; // NO TOUCHY
 Amplify.configure(AmplifyConfig);
 
-// console.log(Amplify.getConfig());
-
-export default route(function ({ store }) {
+export default route(async function ({ store }) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === "history"
@@ -28,28 +26,27 @@ export default route(function ({ store }) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  Router.beforeResolve((to, from, next) => {
-    const commonStore = store.state.value.CommonStore;
-    // console.log("commonStore:", commonStore);
+  const authStore = useAuthStore(store);
 
-    if (to.meta.auth) {
-      console.log("this route is protected!", to.fullPath);
-
-      fetchAuthSession()
-        .then((res) => {
-          if (res.credentials) {
-            // console.log("accessToken:", res.tokens?.idToken?.toString());
-            commonStore.access_token = res.tokens?.idToken?.toString();
-            next();
-          }
-        })
-        .catch(() => {
-          console.log("User is not authenticated");
-          next({
-            name: "Auth",
-          });
-        });
-    } else next();
+  Router.beforeEach((to, from, next) => {
+    // console.log("to.name:", to.params.account_id);
+    if (to.name !== "Auth" && !authStore.userSignedIn)
+      next({
+        name: "Auth",
+        query: {
+          redirect: to.name,
+          account_id: to.params.account_id,
+          region: to.params.region,
+        },
+      });
+    else if (to.name == "Auth") {
+      next();
+    } else {
+      authStore.isUserSignedIn().then((res) => {
+        console.log("isUserSignedIn res:", res);
+        next();
+      });
+    }
   });
 
   return Router;

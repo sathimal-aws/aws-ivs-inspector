@@ -1,10 +1,9 @@
 import { defineStore } from "pinia";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
-import { useCommonStore } from "stores/store-common";
+import { useAuthStore } from "./store-auth";
 
-const commonStore = useCommonStore();
-
+const authStore = useAuthStore();
 const envVars = import.meta.env;
 
 export const useAccountStore = defineStore("AccountStore", {
@@ -21,7 +20,7 @@ export const useAccountStore = defineStore("AccountStore", {
       );
 
       try {
-        // console.log(commonStore.access_token);
+        // console.log("accessToken:", authStore.accessToken);
         const response = await api.get(
           `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-metrics`,
           {
@@ -29,7 +28,7 @@ export const useAccountStore = defineStore("AccountStore", {
               regionName: ivsRegion,
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
               "Access-Control-Allow-Origin": "*",
               "Access-Control-Allow-Methods":
                 "GET, POST, PATCH, PUT, DELETE, OPTIONS",
@@ -72,7 +71,7 @@ export const useAccountStore = defineStore("AccountStore", {
               nextToken: this.quotasNextToken[ivsRegion] || "",
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );

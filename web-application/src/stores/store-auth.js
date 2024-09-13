@@ -1,14 +1,11 @@
 import { defineStore } from "pinia";
 import {
   signIn,
-  signInWithRedirect,
   getCurrentUser,
   fetchAuthSession,
-  autoSignIn,
-  confirmSignIn,
   signOut,
 } from "aws-amplify/auth";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useCommonStore } from "./store-common";
 
 const commonStore = useCommonStore();
@@ -26,23 +23,24 @@ export const useAuthStore = defineStore("AuthStore", {
   actions: {
     async isUserSignedIn() {
       try {
-        await getCurrentUser().then(async (userRes) => {
+        return await getCurrentUser().then(async (userRes) => {
           console.log("user Response:", userRes);
-          this.user = userRes;
-          // if (userRes.userId) {
-          //   const session = await fetchAuthSession();
-          //   console.log("session:", session.tokens?.idToken?.toString());
-          //   // await fetchAuthSession().then((fetchAuthSessionRes) => {
-          //   //   console.log("fetchAuthSessionRes:", fetchAuthSessionRes);
-          //   // });
-          // }
+          if (userRes.userId) {
+            return await fetchAuthSession().then((fetchAuthSessionRes) => {
+              this.accessToken =
+                fetchAuthSessionRes.tokens?.idToken?.toString();
+              // console.log(this.accessToken);
+              this.user = userRes;
+              this.userSignedIn = true;
+              return true;
+            });
+          }
         });
-        return true;
       } catch (err) {
-        console.log("err: ", err);
-        // this.router.push({
-        //   name: "Auth",
-        // });
+        console.log("err: ", err.message);
+        this.router.push({
+          name: "Auth",
+        });
         return err;
       }
       // return fetchAuthSession()
@@ -52,7 +50,7 @@ export const useAuthStore = defineStore("AuthStore", {
       //       .then((res) => {
       //         // res.attributes.status = "loggedIn";
       //         console.log("sign-in attributes: ", res.attributes);
-      //         commit("setUserState", res.attributes);
+      //         commit("setUser", res.attributes);
       //         this.router.push("/dashboard");
       //       })
       //       .catch((error) => {
@@ -116,30 +114,31 @@ export const useAuthStore = defineStore("AuthStore", {
 
     async userSignOut() {
       console.log("user sign out called");
-
       try {
-        signOut().then(() => {
+        return signOut().then(() => {
           this.user = null;
+          return true;
 
           // this.router.beforeEach(async (from, to) => {
           //   console.log(from, to);
           //   return true;
           // });
-          this.router.push({ name: "Auth" });
+          // this.router.push({ name: "Auth" });
         });
-        return true;
       } catch (error) {
         console.log("error sign out", error);
         return error;
       }
     },
 
-    setUserState(state) {
-      this.userState = state;
+    setUser(user) {
+      this.user = user;
+      this.userSignedIn = true;
     },
 
-    clearUserState(state) {
-      this.userState = null;
+    clearUser() {
+      this.user = null;
+      this.userSignedIn = false;
     },
   },
 });

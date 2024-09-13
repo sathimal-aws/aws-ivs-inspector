@@ -2,11 +2,11 @@ import { defineStore } from "pinia";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
 import { useChannelStore } from "stores/store-channel";
-import { useCommonStore } from "stores/store-common";
-const envVars = import.meta.env;
+import { useAuthStore } from "./store-auth";
 
+const authStore = useAuthStore();
 const channelStore = useChannelStore();
-const commonStore = useCommonStore();
+const envVars = import.meta.env;
 
 export const useSessionStore = defineStore("SessionStore", {
   state: () => ({
@@ -34,7 +34,7 @@ export const useSessionStore = defineStore("SessionStore", {
               nextToken: this.streamsNextToken[ivsRegion] || "",
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );
@@ -90,7 +90,7 @@ export const useSessionStore = defineStore("SessionStore", {
               channel_arn: channelArn,
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );
@@ -131,7 +131,7 @@ export const useSessionStore = defineStore("SessionStore", {
               channelArn: channelArn,
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );
@@ -175,7 +175,7 @@ export const useSessionStore = defineStore("SessionStore", {
               channel_id: channelId,
             },
             headers: {
-              Authorization: `Bearer ${commonStore.access_token}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
             },
           }
         );
