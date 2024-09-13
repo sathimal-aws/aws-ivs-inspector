@@ -6,6 +6,13 @@ import { useAuthStore } from "./store-auth";
 const authStore = useAuthStore();
 const envVars = import.meta.env;
 
+const config = {
+  headers: {
+    Authorization: `Bearer ${authStore.accessToken}`,
+    "Access-Control-Allow-Origin": "*",
+  },
+};
+
 export const useAccountStore = defineStore("AccountStore", {
   state: () => ({
     accountQuotas: {},
@@ -20,7 +27,7 @@ export const useAccountStore = defineStore("AccountStore", {
       );
 
       try {
-        // console.log("accessToken:", authStore.accessToken);
+        console.log("accessToken:", config);
         const response = await api.get(
           `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-metrics`,
           {
@@ -28,12 +35,7 @@ export const useAccountStore = defineStore("AccountStore", {
               regionName: ivsRegion,
             },
             headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods":
-                "GET, POST, PATCH, PUT, DELETE, OPTIONS",
-              "Access-Control-Allow-Headers":
-                "Origin, Content-Type, X-Auth-Token",
+              Authorization: `${authStore.accessToken}`,
             },
           }
         );
@@ -71,7 +73,7 @@ export const useAccountStore = defineStore("AccountStore", {
               nextToken: this.quotasNextToken[ivsRegion] || "",
             },
             headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
+              Authorization: `${authStore.accessToken}`,
             },
           }
         );
