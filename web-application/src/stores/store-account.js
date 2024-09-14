@@ -9,7 +9,9 @@ const envVars = import.meta.env;
 const config = {
   headers: {
     Authorization: `Bearer ${authStore.accessToken}`,
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "'*'",
+    "Access-Control-Allow-Methods": "'GET, POST, PATCH, PUT, DELETE, OPTIONS'",
+    "Access-Control-Allow-Headers": "'Origin, Content-Type, X-Auth-Token'",
   },
 };
 
@@ -35,7 +37,13 @@ export const useAccountStore = defineStore("AccountStore", {
               regionName: ivsRegion,
             },
             headers: {
-              Authorization: `${authStore.accessToken}`,
+              Authorization: `Bearer ${authStore.accessToken}`,
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "'*'",
+              "Access-Control-Allow-Methods":
+                "'GET, POST, PATCH, PUT, DELETE, OPTIONS'",
+              "Access-Control-Allow-Headers":
+                "'Origin, Content-Type, X-Auth-Token'",
             },
           }
         );

@@ -14,7 +14,7 @@ live_stream_session_connection_ids_table = dynamodb.Table(
 
 def respond(err, res=None):
     return {
-        "statusCode": "400" if err else "200",
+        "statusCode": 400 if err else 200,
         "body": err.message if err else res,
         "headers": {
             "Content-Type": "application/json",

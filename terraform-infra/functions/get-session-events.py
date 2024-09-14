@@ -13,7 +13,7 @@ stream_state_events_table = dynamodb.Table(f"{os.environ['project_name']}-state-
 
 def respond(err, res=None):
     return {
-        "statusCode": "400" if err else "200",
+        "statusCode": 400 if err else 200,
         "body": err.message if err else res,
         "headers": {
             "Content-Type": "application/json",
