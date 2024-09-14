@@ -1,5 +1,5 @@
-import boto3
 import json
+import boto3
 
 print("List Stream Sessions")
 
@@ -25,8 +25,6 @@ def lambda_handler(event, context):
         nextToken=event["queryStringParameters"]["nextToken"],
         maxResults=100,
     )
-
-    print(ivsListStreamSessionResponse)
 
     return respond(
         None, json.dumps(ivsListStreamSessionResponse, indent=2, default=str)

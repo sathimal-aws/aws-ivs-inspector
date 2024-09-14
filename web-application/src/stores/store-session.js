@@ -16,9 +16,7 @@ export const useSessionStore = defineStore("SessionStore", {
     quotas: {},
     streamsNextToken: {},
   }),
-  getters: {
-    sessionList: (state) => state.sessions,
-  },
+
   actions: {
     async listStreams(ivsRegion) {
       console.log("getting live streams", ivsRegion);
@@ -211,7 +209,6 @@ export const useSessionStore = defineStore("SessionStore", {
           `wss://${apis.get_session_events}.execute-api.${ivsRegion}.amazonaws.com/ivs`
         );
         ws.onopen = () => {
-          // console.log("open response:", ws);
           const data = {
             action: "get-session-events",
             message: {
@@ -220,12 +217,11 @@ export const useSessionStore = defineStore("SessionStore", {
             },
           };
           const payload = JSON.stringify(data);
-          // console.log("payload to send:", payload);
+
           ws.send(payload);
 
           ws.onmessage = (event) => {
             const events = JSON.parse(event.data);
-            // console.log("event data:", events);
             if (!events.ResponseMetadata && Object.keys(events)) {
               if (!this.sessions[ivsRegion]) {
                 this.sessions[ivsRegion] = {};
@@ -306,7 +302,6 @@ export const useSessionStore = defineStore("SessionStore", {
                 console.log("live sessions: ", this.liveSessions[ivsRegion]);
               } else if (event == "Session Ended") {
                 console.log("session ended, removing from the local store");
-                // console.log(this.liveSessions[ivsRegion][channelId]);
                 delete this.liveSessions[ivsRegion][channelId];
 
                 console.log("live sessions: ", this.liveSessions[ivsRegion]);
@@ -347,11 +342,9 @@ export const useSessionStore = defineStore("SessionStore", {
             }
           )
           .then((response) => {
-            // console.log("response:", response);
             if (response.data.statusCode == 200) {
               this.quotas = response.data?.body;
             }
-            // console.log("Quotas:", this.quotas);
           })
           .catch(() => {
             Notify.create({
@@ -361,11 +354,14 @@ export const useSessionStore = defineStore("SessionStore", {
               icon: "report_problem",
             });
           });
-        // Axios.this.sessions = {};
       } catch (error) {
         console.log(error.message);
         return error;
       }
     },
+  },
+
+  getters: {
+    sessionList: (state) => state.sessions,
   },
 });

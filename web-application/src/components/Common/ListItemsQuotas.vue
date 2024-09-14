@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import { defineComponent, toRefs } from "vue";
+import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "ListItems",
@@ -47,10 +47,6 @@ export default defineComponent({
     list: { type: Object, default: null },
     checkList: { type: Object, default: null },
     issue: { type: String, default: null },
-  },
-
-  setup(props) {
-    return {};
   },
 });
 </script>

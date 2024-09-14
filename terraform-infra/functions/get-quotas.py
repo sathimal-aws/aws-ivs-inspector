@@ -1,5 +1,5 @@
-import boto3
 import json
+import boto3
 
 print("Getting Quotas")
 
@@ -25,7 +25,5 @@ def lambda_handler(event, context):
         # NextToken=event["queryStringParameters"]["nextToken"],
         MaxResults=100,
     )
-
-    print(listServiceQuotasResponse["Quotas"])
 
     return respond(None, json.dumps(listServiceQuotasResponse, indent=2, default=str))

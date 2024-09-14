@@ -139,29 +139,6 @@
                     <q-separator color="primary" />
                   </div>
                 </q-item>
-
-                <!-- <q-tr
-              :props="props"
-              class="cursor-pointer"
-              @click="goToChannelDetails(props.row)"
-            >
-              <q-td key="name" :props="props">
-                {{ props.row.channelConfig.name }}
-              </q-td>
-              <q-td key="authorized" :props="props">
-                {{ props.row.channelConfig.authorized }}
-              </q-td>
-              <q-td key="latencyMode" :props="props">
-                {{ props.row.channelConfig.latencyMode }}
-              </q-td>
-              <q-td key="insecureIngest" :props="props">
-                {{ props.row.channelConfig.insecureIngest }}
-              </q-td>
-
-              <q-td key="arn" :props="props">
-                {{ props.row.channelConfig.arn }}
-              </q-td>
-            </q-tr> -->
               </template>
             </q-table>
           </q-scroll-area>

@@ -1,7 +1,6 @@
 <template>
   <div class="col q-gutter-sm body-spacing">
     <div class="col">
-      <!-- {{ metrics?.[0] }} -->
       <div class="row q-gutter-sm col-12 col-md">
         <div
           v-for="(metric, index) in metrics"
@@ -32,8 +31,6 @@
       </div>
     </div>
 
-    <!-- {{ concurrentStreams }}
-    {{ accountStore.metrics?.[ivsRegion]?.[1]["Datapoints"] }} -->
     <div class="col" v-if="metrics">
       <div class="row q-gutter-sm col-12 col-md">
         <q-list class="col box-decorator">
@@ -126,7 +123,7 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, onMounted } from "vue";
 import { useAccountStore } from "src/stores/store-account";
 import { useCommonStore } from "src/stores/store-common";
 import { useRoute } from "vue-router";
@@ -136,9 +133,9 @@ export default defineComponent({
   name: "DashBoard",
 
   setup() {
+    const $route = useRoute();
     const commonStore = useCommonStore();
     const accountStore = useAccountStore();
-    const $route = useRoute();
     const ivsRegion = $route.params.region;
 
     const concurrentViews = computed(
@@ -149,25 +146,7 @@ export default defineComponent({
       () => accountStore.metrics?.[ivsRegion]?.[1]["Datapoints"]
     );
 
-    const metrics = computed(() => {
-      var metricsManipulation = accountStore.metrics[ivsRegion];
-      // console.log(metricsManipulation);
-      // const ConcurrentViews = metricsManipulation?.[0]?.["Datapoints"].sort(
-      //   (x, y) =>
-      //     new Date(y.Timestamp).getTime() - new Date(x.Timestamp).getTime()
-      // )?.[0];
-      // const ConcurrentStreams = metricsManipulation?.[1]?.["Datapoints"].sort(
-      //   (x, y) =>
-      //     new Date(y.Timestamp).getTime() - new Date(x.Timestamp).getTime()
-      // )?.[0];
-
-      // console.log("", ConcurrentStreams);
-      // if (metricsManipulation) {
-      //   metricsManipulation[0]["Datapoints"] = [ConcurrentViews];
-      //   metricsManipulation[1]["Datapoints"] = [ConcurrentStreams];
-      // }
-      return metricsManipulation;
-    });
+    const metrics = computed(() => accountStore.metrics[ivsRegion]);
 
     const quotasProvisioned = computed(
       () => accountStore.accountQuotas[ivsRegion]
@@ -248,7 +227,6 @@ export default defineComponent({
     };
   },
 
-  // eslint-disable-next-line vue/no-unused-components
   components: { ChartUsageMetrics },
 });
 </script>

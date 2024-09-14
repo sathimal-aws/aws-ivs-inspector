@@ -1,4 +1,4 @@
-import os
+import os, json
 import boto3
 import botocore.exceptions as exceptions
 import logging
@@ -25,7 +25,7 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    # print("Received event: " + json.dumps(event, indent=2))
+    print("Received event: " + json.dumps(event, indent=2))
     try:
         connectionId = event["requestContext"]["connectionId"]
         print("connectionId:", connectionId)
@@ -56,7 +56,6 @@ def lambda_handler(event, context):
             )
 
             return respond(None, "connection ID deleted!")
-            # return {"statusCode": 200, "body": json.dumps("disconnected!")}
 
     except exceptions.ClientError as err:
         logger.error(

@@ -45,7 +45,6 @@
 
         <q-separator color="primary" />
 
-        <!-- {{ liveSessions }} -->
         <!-- channel list -->
         <div class="col" v-if="liveSessions">
           <q-scroll-area
@@ -100,17 +99,6 @@
                           }}
                         </q-item-label>
                       </q-item-section>
-
-                      <!-- <q-separator vertical />
-
-                      <q-item-section class="col-auto q-px-sm text-right">
-                        <q-item-label class="col text-theme text-caption">
-                          Health
-                        </q-item-label>
-                        <q-item-label lines="1" class="text-grey-9">
-                          {{ props.row.health }}
-                        </q-item-label>
-                      </q-item-section> -->
                     </q-item>
 
                     <q-separator />
@@ -127,17 +115,6 @@
 
                       <q-separator vertical />
 
-                      <!-- <q-item-section class="col-auto q-px-sm text-right">
-                        <q-item-label class="col text-theme text-caption">
-                          CCV
-                        </q-item-label>
-                        <q-item-label lines="1" class="text-grey-9">
-                          {{ props.row.viewerCount }}
-                        </q-item-label>
-                      </q-item-section>
-
-                      <q-separator vertical /> -->
-
                       <q-item-section class="col-auto q-px-sm text-right">
                         <q-item-label class="col text-theme text-caption">
                           State
@@ -151,29 +128,6 @@
                     <q-separator color="primary" />
                   </div>
                 </q-item>
-
-                <!-- <q-tr
-              :props="props"
-              class="cursor-pointer"
-              @click="goToChannelDetails(props.row)"
-            >
-              <q-td key="name" :props="props">
-                {{ props.row.name }}
-              </q-td>
-              <q-td key="authorized" :props="props">
-                {{ props.row.authorized }}
-              </q-td>
-              <q-td key="latencyMode" :props="props">
-                {{ props.row.latencyMode }}
-              </q-td>
-              <q-td key="insecureIngest" :props="props">
-                {{ props.row.insecureIngest }}
-              </q-td>
-
-              <q-td key="arn" :props="props">
-                {{ props.row.arn }}
-              </q-td>
-            </q-tr> -->
               </template>
             </q-table>
           </q-scroll-area>
@@ -189,7 +143,6 @@
           <q-tab-panels
             v-model="currentChannel.channelId"
             animated
-            swipeable
             vertical
             transition-prev="jump-up"
             transition-next="jump-up"
@@ -305,8 +258,6 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      console.log("live sessions: ", liveSessions.value);
-
       sessionStore.getLiveStreams(awsRegion).then((res) => {
         console.log(res);
       });

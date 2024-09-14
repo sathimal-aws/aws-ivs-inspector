@@ -183,7 +183,6 @@ resource "aws_api_gateway_deployment" "deployment" {
     aws_api_gateway_method_response.method_response,
     aws_api_gateway_integration.integration,
     aws_api_gateway_integration_response.integration_response,
-    # aws_api_gateway_integration_response.options_integration_response,
     aws_lambda_function.lambda_function,
   ]
 }

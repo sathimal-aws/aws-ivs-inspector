@@ -25,21 +25,14 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    # print("Received event: " + json.dumps(event, indent=2))
-    eventType = event["requestContext"]["eventType"]
     connectionId = event["requestContext"]["connectionId"]
 
-    print("eventType:", eventType)
-
     try:
-        print("connectionId:", connectionId)
         live_stream_session_connection_ids_table.delete_item(
             Key={
                 "connectionId": connectionId,
             },
         )
-
-        # logger.info(live_stream_session_connection_ids_table)
 
         return respond(None, "connection ID deleted!")
 

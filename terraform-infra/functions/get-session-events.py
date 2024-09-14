@@ -30,11 +30,6 @@ def lambda_handler(event, context):
     domainName = event["requestContext"]["domainName"]
     stage = event["requestContext"]["stage"]
     connectionId = event["requestContext"]["connectionId"]
-    eventType = requestContext["eventType"]
-    routeKey = requestContext["routeKey"]
-
-    print("eventType:", eventType)
-    print("routeKey:", routeKey)
 
     try:
         body = json.loads(event["body"])
@@ -70,7 +65,6 @@ def lambda_handler(event, context):
             ConnectionId=connectionId,
             Data=json.dumps(streamEventDetails["Item"]["events"], default=str).encode(),
         )
-        print("response: ", response)
         return respond(None, json.dumps(response, indent=2, default=str))
 
     except exceptions.ClientError as err:

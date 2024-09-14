@@ -22,7 +22,6 @@ def respond(err, res=None):
 
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event["queryStringParameters"], indent=2))
-
     data = ingest_metrics_table.get_item(
         Key={
             "streamId": event["queryStringParameters"]["stream_id"],

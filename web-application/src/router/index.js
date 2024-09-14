@@ -29,7 +29,6 @@ export default route(async function ({ store }) {
   const authStore = useAuthStore(store);
 
   Router.beforeEach((to, from, next) => {
-    // console.log("to.name:", to.params.account_id);
     if (to.name !== "Auth" && !authStore.userSignedIn)
       next({
         name: "Auth",

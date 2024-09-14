@@ -1,5 +1,5 @@
-import boto3
 import json
+import boto3
 
 print("Getting Channel Details")
 ivsClient = boto3.client("ivs")
@@ -22,7 +22,5 @@ def lambda_handler(event, context):
     ivsGetChannelResponse = ivsClient.get_channel(
         arn=event["queryStringParameters"]["channelArn"],
     )
-
-    print(ivsGetChannelResponse)
 
     return respond(None, json.dumps(ivsGetChannelResponse, indent=2, default=str))

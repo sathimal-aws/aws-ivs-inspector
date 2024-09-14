@@ -28,6 +28,4 @@ def lambda_handler(event, context):
         }
     )
 
-    print(streamSessionsDetails)
-
     return respond(None, json.dumps(streamSessionsDetails, indent=2, default=str))

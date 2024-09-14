@@ -9,7 +9,6 @@ import { computed } from "vue";
 import { useCommonStore } from "./store-common";
 
 const commonStore = useCommonStore();
-const accountId = computed(() => commonStore.account_id);
 const ivsRegions = computed(() => commonStore.regions);
 
 export const useAuthStore = defineStore("AuthStore", {
@@ -29,7 +28,6 @@ export const useAuthStore = defineStore("AuthStore", {
             return await fetchAuthSession().then((fetchAuthSessionRes) => {
               this.accessToken =
                 fetchAuthSessionRes.tokens?.idToken?.toString();
-              // console.log(this.accessToken);
               this.user = userRes;
               this.userSignedIn = true;
               return true;
@@ -43,43 +41,9 @@ export const useAuthStore = defineStore("AuthStore", {
         });
         return err;
       }
-      // return fetchAuthSession()
-      //   .then((data) => {
-      //     console.log("current session: ", data);
-      //     return Auth.currentAuthenticatedUser()
-      //       .then((res) => {
-      //         // res.attributes.status = "loggedIn";
-      //         console.log("sign-in attributes: ", res.attributes);
-      //         commit("setUser", res.attributes);
-      //         this.router.push("/dashboard");
-      //       })
-      //       .catch((error) => {
-      //         console.log("error: ", error);
-      //         if (error == "The user is not authenticated") {
-      //           this.router.push("/login");
-      //           dispatch("clearUserState");
-      //         }
-      //       });
-      //     // .then(() => {
-      //     //   return true;
-      //     // });
-      //   })
-    },
-
-    async currentSession() {
-      try {
-        const { accessToken, idToken } =
-          (await fetchAuthSession()).tokens ?? {};
-
-        console.log(accessToken);
-      } catch (err) {
-        console.log(err);
-      }
     },
 
     async userSignIn(payload) {
-      // console.log( "user cred", payload);
-
       try {
         const signInResponse = await signIn({
           username: payload.email,
@@ -118,12 +82,6 @@ export const useAuthStore = defineStore("AuthStore", {
         return signOut().then(() => {
           this.user = null;
           return true;
-
-          // this.router.beforeEach(async (from, to) => {
-          //   console.log(from, to);
-          //   return true;
-          // });
-          // this.router.push({ name: "Auth" });
         });
       } catch (error) {
         console.log("error sign out", error);

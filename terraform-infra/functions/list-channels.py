@@ -1,5 +1,5 @@
-import boto3
 import json
+import boto3
 
 print("Getting List of Channels")
 
@@ -24,7 +24,5 @@ def lambda_handler(event, context):
         maxResults=6,
         nextToken=event["queryStringParameters"]["nextToken"],
     )
-
-    print("Response: " + json.dumps(ivsGetChannelsResponse, indent=2))
 
     return respond(None, json.dumps(ivsGetChannelsResponse, indent=2, default=str))

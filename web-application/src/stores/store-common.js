@@ -2,6 +2,8 @@ import { defineStore } from "pinia";
 
 const envVars = import.meta.env;
 
+console.log(envVars);
+
 export const useCommonStore = defineStore("CommonStore", {
   state: () => ({
     account_id: envVars.VITE_ACCOUNT_ID,

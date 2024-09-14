@@ -1,5 +1,5 @@
-import boto3
 import json
+import boto3
 
 print("Get Stream Details")
 
@@ -23,7 +23,5 @@ def lambda_handler(event, context):
     ivsGetStreamResponse = ivsClient.get_stream(
         channelArn=event["queryStringParameters"]["channelArn"],
     )
-
-    print(ivsGetStreamResponse)
 
     return respond(None, json.dumps(ivsGetStreamResponse, indent=2, default=str))

@@ -38,9 +38,6 @@
             :list="sessionDetails?.recordingConfiguration"
           />
         </div>
-        <!-- <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-          <list-items-quotas type="Limits (provision/usage)" :list="limits" />
-        </div> -->
       </div>
     </div>
   </div>
@@ -52,7 +49,6 @@ import { useRoute } from "vue-router";
 import { useSessionStore } from "src/stores/store-session";
 import ChartBitrate from "src/components/Charts/ChartIngestMetrics.vue";
 import ListItems from "src/components/Common/ListItems.vue";
-import ListItemsQuotas from "src/components/Common/ListItemsQuotas.vue";
 
 export default defineComponent({
   name: "sessionDetails",
@@ -117,7 +113,6 @@ export default defineComponent({
   components: {
     ChartBitrate,
     ListItems,
-    // ListItemsQuotas,
   },
 });
 </script>

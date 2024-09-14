@@ -179,14 +179,10 @@ resource "aws_cognito_user_group" "cognito_user_groups" {
 
 # Admin User Group Association
 resource "aws_cognito_user_in_group" "cognito_user_group_memberships" {
-  for_each = local.users_and_their_groups
-  # for_each = var.cognito_users == null ? {} : var.cognito_users
-  # for_each     = var.admin_cognito_users == null ? {} : var.admin_cognito_users
+  for_each     = local.users_and_their_groups
   user_pool_id = aws_cognito_user_pool.user_pool.id
   group_name   = each.value.group_name
-  # group_name   = [each.key].group_membership
-  # group_name   = aws_cognito_user_group.admin_cognito_user_group.name
-  username = each.value.username
+  username     = each.value.username
   depends_on = [
     aws_cognito_user.cognito_users,
     aws_cognito_user_group.cognito_user_groups,

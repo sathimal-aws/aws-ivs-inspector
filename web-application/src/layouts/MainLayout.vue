@@ -95,20 +95,6 @@
         <q-item
           clickable
           class="col-auto q-pa-md"
-          @click="redirectTo('Settings')"
-        >
-          <q-item-section avatar>
-            <q-icon name="settings" />
-          </q-item-section>
-
-          <q-item-section>
-            <q-item-label> Settings </q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item
-          clickable
-          class="col-auto q-pa-md"
           @click="signOutAndRedirectTo"
         >
           <q-item-section avatar>
@@ -123,16 +109,13 @@
     </q-drawer>
 
     <q-page-container>
-      <!-- {{ route }}
-      <br />
-      {{ user }} -->
       <router-view />
     </q-page-container>
   </q-layout>
 </template>
 
 <script>
-import { computed, defineComponent, ref, onMounted } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { useAccountStore } from "src/stores/store-account";
@@ -171,8 +154,6 @@ export default defineComponent({
         icon: "settings_input_antenna",
         link: `/account/${accountId.value}/region/${region.value}/live_channels`,
       },
-
-      // { title: "Sessions", icon: "format_list_bulleted", link: "/channels" },
     ]);
 
     const $route = useRoute();
@@ -194,8 +175,6 @@ export default defineComponent({
     };
 
     const changeRegion = (newRegion) => {
-      console.log("region change:", newRegion);
-      // region.value = newRegion;
       const quotasProvisioned = computed(
         () => accountStore.accountQuotas[newRegion]
       );
@@ -225,10 +204,6 @@ export default defineComponent({
         }
       });
     };
-
-    onMounted(async () => {
-      // await authStore.isUserSignedIn().then((res) => console.log(res));
-    });
 
     return {
       user,
@@ -263,102 +238,21 @@ export default defineComponent({
 .ivs-bg-grey
   background-color: $grey-2
 
-.round-edge-right-10
-  border-radius: 0 40px 20px 0
-
-.round-edge-left-10
-  border-radius: 20px 0 0 40px
-
-.round-edge-left-right-10
-  border-radius: 20px 40px 20px 40px
-
-.round-edge-10
-  border-radius: 10px
-
-.round-edge-8
-  border-radius: 8px
-
-.round-edge-6
-  border-radius: 6px
-
-.shadow-6
-  box-shadow: 0 0 6px $grey-10
-
-.shadow-8
-  box-shadow: 0 0 8px $grey-10
-
-.shadow-10
-  box-shadow: 0 0 10px $grey-10
-
 .border
   border: 1px solid $grey-4
 
-.border-neutral
-  border: 1px solid $grey-7
-
 .border-right
   border-right: 1px solid $grey-3
-
-.border-red
-  border: 1px solid $red
-
-.border-green
-  border: 1px solid green
 
 .body-spacing
   padding: 15px 15px
 
 .body-head-height
   height: calc( 100vh - 58px )
-  // overflow: hidden
-
-.body-head-nav-height
-  height: calc( 100vh - 90px )
-
-.body-head-search-height
-  height: calc( 100vh - 80px )
-
-@media (max-width: 1024px)
-  .body-head-search-height
-    height: calc( 100vh - 140px )
-
-@media (max-width: 600px)
-  .body-head-search-height
-    height: calc( 100vh - 176px )
-
-@media (max-width: 400px)
-  .body-head-search-height
-    height: calc( 100vh - 210px )
-
-@media (max-width: 400px)
-  .media-card
-    max-width: calc( 91vw - 0px )
-
-@keyframes fadeInUp
-    from
-        transform: translate3d(0,40px,0)
-    to
-        transform: translate3d(0,0,0)
-        opacity: 1
-
-@-webkit-keyframes fadeInUp
-    from
-        transform: translate3d(0,40px,0)
-    to
-        transform: translate3d(0,0,0)
-        opacity: 1
 
 .animated
     animation-duration: 1s
     animation-fill-mode: both
     -webkit-animation-duration: 1s
     -webkit-animation-fill-mode: both
-
-.animatedFadeInUp
-    opacity: 0
-
-.fadeInUp
-    opacity: 0
-    animation-name: fadeInUp
-    -webkit-animation-name: fadeInUp
 </style>
