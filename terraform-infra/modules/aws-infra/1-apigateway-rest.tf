@@ -57,6 +57,15 @@ resource "aws_api_gateway_integration" "integration" {
   type                    = "AWS_PROXY"
   timeout_milliseconds    = 29000
   uri                     = aws_lambda_function.lambda_function[each.key].invoke_arn
+
+  request_templates = {
+    "application/json" = jsonencode(
+      {
+        statusCode = 200
+      }
+    )
+  }
+
   depends_on = [
     aws_api_gateway_method.method,
     aws_lambda_function.lambda_function
