@@ -36,16 +36,16 @@ resource "aws_api_gateway_method" "method" {
   ]
 }
 
-# resource "aws_api_gateway_method" "options_method" {
-#   for_each      = { for api in var.rest_apis : api.name => api }
-#   rest_api_id   = aws_api_gateway_rest_api.rest_api.id
-#   resource_id   = aws_api_gateway_resource.resource[each.key].id
-#   http_method   = "OPTIONS"
-#   authorization = "NONE"
-#   depends_on = [
-#     aws_api_gateway_authorizer.authorizer,
-#   ]
-# }
+resource "aws_api_gateway_method" "options_method" {
+  for_each      = { for api in var.rest_apis : api.name => api }
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.resource[each.key].id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+  depends_on = [
+    aws_api_gateway_authorizer.authorizer,
+  ]
+}
 
 # integrate with Lambda
 resource "aws_api_gateway_integration" "integration" {
@@ -63,16 +63,16 @@ resource "aws_api_gateway_integration" "integration" {
   ]
 }
 
-# resource "aws_api_gateway_integration" "options_integration" {
-#   for_each    = { for api in var.rest_apis : api.name => api }
-#   rest_api_id = aws_api_gateway_rest_api.rest_api.id
-#   resource_id = aws_api_gateway_resource.resource[each.key].id
-#   http_method = aws_api_gateway_method.options_method[each.key].http_method
-#   type        = "MOCK"
-#   depends_on = [
-#     aws_api_gateway_method.options_method
-#   ]
-# }
+resource "aws_api_gateway_integration" "options_integration" {
+  for_each    = { for api in var.rest_apis : api.name => api }
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  resource_id = aws_api_gateway_resource.resource[each.key].id
+  http_method = aws_api_gateway_method.options_method[each.key].http_method
+  type        = "MOCK"
+  depends_on = [
+    aws_api_gateway_method.options_method
+  ]
+}
 
 # method response from Lambda that passes back to Client application
 resource "aws_api_gateway_method_response" "method_response" {
@@ -92,25 +92,25 @@ resource "aws_api_gateway_method_response" "method_response" {
   ]
 }
 
-# resource "aws_api_gateway_method_response" "options_method_response" {
-#   for_each    = { for api in var.rest_apis : api.name => api }
-#   rest_api_id = aws_api_gateway_rest_api.rest_api.id
-#   resource_id = aws_api_gateway_resource.resource[each.key].id
-#   http_method = aws_api_gateway_method.options_method[each.key].http_method
-#   status_code = "200"
+resource "aws_api_gateway_method_response" "options_method_response" {
+  for_each    = { for api in var.rest_apis : api.name => api }
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  resource_id = aws_api_gateway_resource.resource[each.key].id
+  http_method = aws_api_gateway_method.options_method[each.key].http_method
+  status_code = "200"
 
-#   response_parameters = {
-#     "method.response.header.Access-Control-Allow-Headers" = true,
-#     "method.response.header.Access-Control-Allow-Methods" = true,
-#     "method.response.header.Access-Control-Allow-Origin"  = true
-#   }
-#   response_models = {
-#     "application/json" = "Empty"
-#   }
-#   depends_on = [
-#     aws_api_gateway_integration.options_integration
-#   ]
-# }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+  response_models = {
+    "application/json" = "Empty"
+  }
+  depends_on = [
+    aws_api_gateway_integration.options_integration
+  ]
+}
 
 # integration response from Lambda
 resource "aws_api_gateway_integration_response" "integration_response" {
@@ -130,22 +130,22 @@ resource "aws_api_gateway_integration_response" "integration_response" {
   ]
 }
 
-# resource "aws_api_gateway_integration_response" "options_integration_response" {
-#   for_each    = { for api in var.rest_apis : api.name => api }
-#   rest_api_id = aws_api_gateway_rest_api.rest_api.id
-#   resource_id = aws_api_gateway_resource.resource[each.key].id
-#   http_method = aws_api_gateway_method.options_method[each.key].http_method
-#   status_code = aws_api_gateway_method_response.options_method_response[each.key].status_code
-#   response_parameters = {
-#     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-#     "method.response.header.Access-Control-Allow-Methods" = "'*'",
-#     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-#   }
-#   depends_on = [
-#     aws_api_gateway_method.options_method,
-#     aws_api_gateway_integration.options_integration
-#   ]
-# }
+resource "aws_api_gateway_integration_response" "options_integration_response" {
+  for_each    = { for api in var.rest_apis : api.name => api }
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  resource_id = aws_api_gateway_resource.resource[each.key].id
+  http_method = aws_api_gateway_method.options_method[each.key].http_method
+  status_code = aws_api_gateway_method_response.options_method_response[each.key].status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'*'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+  depends_on = [
+    aws_api_gateway_method.options_method,
+    aws_api_gateway_integration.options_integration
+  ]
+}
 
 # deploy the API
 resource "aws_api_gateway_deployment" "deployment" {

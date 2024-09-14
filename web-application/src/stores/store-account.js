@@ -11,7 +11,8 @@ const config = {
     Authorization: `Bearer ${authStore.accessToken}`,
     "Access-Control-Allow-Origin": "'*'",
     "Access-Control-Allow-Methods": "'GET, POST, PATCH, PUT, DELETE, OPTIONS'",
-    "Access-Control-Allow-Headers": "'Origin, Content-Type, X-Auth-Token'",
+    "Access-Control-Allow-Headers":
+      "'Origin, Content-Type, X-Auth-Token,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'",
   },
 };
 
@@ -37,13 +38,7 @@ export const useAccountStore = defineStore("AccountStore", {
               regionName: ivsRegion,
             },
             headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "'*'",
-              "Access-Control-Allow-Methods":
-                "'GET, POST, PATCH, PUT, DELETE, OPTIONS'",
-              "Access-Control-Allow-Headers":
-                "'Origin, Content-Type, X-Auth-Token'",
+              Authorization: `${authStore.accessToken}`,
             },
           }
         );
