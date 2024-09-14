@@ -78,6 +78,15 @@ resource "aws_api_gateway_integration" "options_integration" {
   resource_id = aws_api_gateway_resource.resource[each.key].id
   http_method = aws_api_gateway_method.options_method[each.key].http_method
   type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode(
+      {
+        statusCode = 200
+      }
+    )
+  }
+
   depends_on = [
     aws_api_gateway_method.options_method
   ]
