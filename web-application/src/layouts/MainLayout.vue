@@ -175,20 +175,30 @@ export default defineComponent({
     };
 
     const changeRegion = (newRegion) => {
-      const quotasProvisioned = computed(
-        () => accountStore.accountQuotas[newRegion]
-      );
-
-      if (!quotasProvisioned.value?.length) {
-        accountStore.getQuotaProvisioned("ivs", newRegion);
-      }
-
       $router.push({
         name: "Dashboard",
         params: {
           account_id: accountId.value,
           region: region.value,
         },
+      });
+
+      $router.beforeResolve((to, from, next) => {
+        const metrics = computed(() => accountStore.metrics[newRegion]);
+
+        if (!metrics.value?.length) {
+          accountStore.getMetrics(newRegion);
+        }
+
+        const quotasProvisioned = computed(
+          () => accountStore.accountQuotas[newRegion]
+        );
+
+        if (!quotasProvisioned.value?.length) {
+          accountStore.getQuotaProvisioned("ivs", newRegion);
+        }
+
+        next();
       });
     };
 

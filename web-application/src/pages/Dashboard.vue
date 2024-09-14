@@ -47,11 +47,6 @@
               </q-item-label>
             </q-item-section>
           </q-item>
-
-          <chart-usage-metrics
-            :metrics="accountStore.metrics?.[ivsRegion]?.[1]['Datapoints']"
-            label="Concurrent Streams"
-          />
         </q-list>
 
         <q-list class="col box-decorator">
@@ -66,11 +61,6 @@
               </q-item-label>
             </q-item-section>
           </q-item>
-
-          <chart-usage-metrics
-            :metrics="accountStore.metrics?.[ivsRegion]?.[0]['Datapoints']"
-            label="Concurrent Views"
-          />
         </q-list>
       </div>
     </div>
@@ -127,7 +117,6 @@ import { computed, defineComponent, onMounted } from "vue";
 import { useAccountStore } from "src/stores/store-account";
 import { useCommonStore } from "src/stores/store-common";
 import { useRoute } from "vue-router";
-import ChartUsageMetrics from "src/components/Charts/ChartUsageMetrics.vue";
 
 export default defineComponent({
   name: "DashBoard",
@@ -136,20 +125,12 @@ export default defineComponent({
     const $route = useRoute();
     const commonStore = useCommonStore();
     const accountStore = useAccountStore();
-    const ivsRegion = $route.params.region;
+    const ivsRegion = computed(() => $route.params.region);
 
-    const concurrentViews = computed(
-      () => accountStore.metrics?.[ivsRegion]?.[0]["Datapoints"]
-    );
-
-    const concurrentStreams = computed(
-      () => accountStore.metrics?.[ivsRegion]?.[1]["Datapoints"]
-    );
-
-    const metrics = computed(() => accountStore.metrics[ivsRegion]);
+    const metrics = computed(() => accountStore.metrics[ivsRegion.value]);
 
     const quotasProvisioned = computed(
-      () => accountStore.accountQuotas[ivsRegion]
+      () => accountStore.accountQuotas[ivsRegion.value]
     );
 
     const quotasLowLatencyKeys = [
@@ -207,27 +188,22 @@ export default defineComponent({
 
     onMounted(() => {
       if (!quotasProvisioned.value?.length) {
-        accountStore.getQuotaProvisioned("ivs", ivsRegion);
+        accountStore.getQuotaProvisioned("ivs", ivsRegion.value);
       }
-
-      accountStore.getMetrics(ivsRegion);
+      if (!metrics.value?.length) {
+        accountStore.getMetrics(ivsRegion.value);
+      }
     });
 
     return {
       metrics,
-      concurrentViews,
-      concurrentStreams,
       quotasProvisioned,
-      accountStore,
       quotasLowLatency,
       quotasStages,
       columns,
-      ivsRegion,
       initialPagination: commonStore.initialPagination,
     };
   },
-
-  components: { ChartUsageMetrics },
 });
 </script>
 

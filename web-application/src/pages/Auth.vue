@@ -51,14 +51,22 @@ export default defineComponent({
     watch(user, (currentValue, oldValue) => {
       if (currentValue?.userId) {
         authStore.setUser(currentValue);
-        const params = {
-          account_id: $route.query.account_id || commonStore.account_id,
-          region: $route.query.region || commonStore.regions[0],
-        };
-        $router.push({
-          name: $route.query.redirect || "Dashboard",
-          params: params,
-        });
+
+        if ($route.query.redirect) {
+          const params = {
+            account_id: $route.query.account_id,
+            region: $route.query.region,
+          };
+
+          $router.push({
+            name: $route.query.redirect,
+            params: params,
+          });
+        } else {
+          $router.push(
+            `account/${commonStore.account_id}/region/${commonStore.regions[0]}/dashboard`
+          );
+        }
       }
     });
 
