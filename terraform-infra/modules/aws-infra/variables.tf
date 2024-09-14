@@ -186,10 +186,6 @@ variable "lambdas" {
   }))
 
   default = [
-    # {
-    #   name    = "user-authorizer"
-    #   timeout = 60
-    # },
     {
       name    = "get-metrics"
       timeout = 120
@@ -261,14 +257,6 @@ variable "assume_roles" {
   }))
 
   default = [
-    # {
-    #   name        = "api-gateway-auth-invocation"
-    #   assume_role = ["apigateway.amazonaws.com"]
-    # },
-    # {
-    #   name        = "user-authorizer"
-    #   assume_role = ["lambda.amazonaws.com"]
-    # },
     {
       name        = "get-metrics"
       assume_role = ["lambda.amazonaws.com"]

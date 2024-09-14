@@ -11,51 +11,6 @@ locals {
   task_definition = "${var.project_name}-ingest-metrics-task-definition"
 
   policies = [
-    # {
-    #   name = "api-gateway-auth-invocation"
-    #   statements = [
-    #     {
-    #       effect = "Allow"
-    #       actions = [
-    #         "logs:CreateLogGroup",
-    #         "logs:CreateLogStream",
-    #         "logs:PutLogEvents",
-    #       ]
-    #       resources = ["arn:aws:logs:${var.region}:${var.account_id}:log-group:*"]
-    #     },
-    #     {
-    #       effect = "Allow"
-    #       actions = [
-    #         "lambda:InvokeFunction"
-    #       ]
-    #       resources = [aws_lambda_function.lambda_function["user-authorizer"].arn]
-    #     },
-    #     # {
-    #     #   effect = "Allow"
-    #     #   actions = [
-    #     #     "execute-api:Invoke",
-    #     #   ]
-    #     #   resources = [
-    #     #     "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_apigatewayv2_stage.stage["get-live-streams"].api_id}/${var.environment}/*/*",
-    #     #     "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_apigatewayv2_stage.stage["get-session-events"].api_id}/${var.environment}/*/*"
-    #     #   ]
-    #     # },
-    #   ]
-    # },
-    # {
-    #   name = "user-authorizer"
-    #   statements = [
-    #     {
-    #       effect = "Allow"
-    #       actions = [
-    #         "logs:CreateLogGroup",
-    #         "logs:CreateLogStream",
-    #         "logs:PutLogEvents",
-    #       ]
-    #       resources = ["arn:aws:logs:${var.region}:${var.account_id}:log-group:*"]
-    #     },
-    #   ]
-    # },
     {
       name = "get-metrics"
       statements = [

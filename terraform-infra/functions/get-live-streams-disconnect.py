@@ -2,6 +2,7 @@ import logging, os
 import boto3
 import botocore.exceptions as exceptions
 
+print("Getting Live Stream Disconnections")
 
 logger = logging.getLogger()
 

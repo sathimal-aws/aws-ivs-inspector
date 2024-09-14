@@ -2,6 +2,7 @@ import json, os
 import boto3
 
 print("Get Stream Session Details")
+
 dynamodb = boto3.resource("dynamodb")
 stream_sessions_table = dynamodb.Table(f"{os.environ['project_name']}-stream-sessions")
 

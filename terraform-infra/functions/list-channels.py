@@ -2,6 +2,7 @@ import boto3
 import json
 
 print("Getting List of Channels")
+
 ivsClient = boto3.client("ivs")
 
 

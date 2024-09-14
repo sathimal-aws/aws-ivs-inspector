@@ -7,6 +7,9 @@ logger = logging.getLogger()
 dynamodb = boto3.resource("dynamodb")
 from boto3.dynamodb.conditions import Key, Attr
 
+print("Get Session Events Disconnections")
+
+
 stream_state_events_table = dynamodb.Table(f"{os.environ['project_name']}-state-events")
 
 

@@ -2,6 +2,7 @@ import boto3
 import json
 
 print("List Stream Sessions")
+
 ivsClient = boto3.client("ivs")
 
 

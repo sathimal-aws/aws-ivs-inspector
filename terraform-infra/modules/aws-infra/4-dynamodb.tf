@@ -30,17 +30,3 @@ resource "aws_dynamodb_table" "tables" {
     environment = "ivs"
   }
 }
-
-// # TODO: Create a DynamoDB to save all API URLs
-// # resource "aws_dynamodb_table_item" "url" {
-// #   table_name = aws_dynamodb_table.${var.project_name}_apis.name
-// #   hash_key   = aws_dynamodb_table.${var.project_name}_apis.hash_key
-// #   item       = <<ITEM
-// #     {
-// #         "id": { "N": "${each.key}"},
-// #         "location": {"S" : "${each.value.location}"},
-// #         "visible": {"B" : "${each.value.visible}"},
-// #         "destinations": {"L" : [{"N": "${each.value.destinations}"}]
-// #     }
-// #     ITEM
-// # }

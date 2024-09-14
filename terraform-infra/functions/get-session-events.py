@@ -10,6 +10,8 @@ dynamodb = boto3.resource("dynamodb")
 
 stream_state_events_table = dynamodb.Table(f"{os.environ['project_name']}-state-events")
 
+print("Get Session Events")
+
 
 def respond(err, res=None):
     return {

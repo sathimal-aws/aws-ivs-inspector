@@ -2,6 +2,7 @@ import logging, os
 import boto3
 import botocore.exceptions as exceptions
 
+print("Getting Live Stream Connections")
 
 logger = logging.getLogger()
 
@@ -39,7 +40,6 @@ def lambda_handler(event, context):
         )
 
         return respond(None, "connection ID added!")
-        # return respond(None, json.dumps(response, indent=2, default=str))
 
     except exceptions.ClientError as err:
         logger.error(

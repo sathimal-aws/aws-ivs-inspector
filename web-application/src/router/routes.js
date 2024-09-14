@@ -5,23 +5,6 @@ const routes = [
     component: () => import("src/pages/Auth.vue"),
   },
 
-  // {
-  //   path: "/login",
-  //   component: () => import("pages/Login.vue")
-  // },
-  // {
-  //   path: "/forgot_password",
-  //   component: () => import("pages/ForgotPassword.vue")
-  // },
-  // {
-  //   path: "/reset_password",
-  //   component: () => import("pages/ResetPassword.vue")
-  // },
-  // {
-  //   path: "/register",
-  //   component: () => import("pages/Register.vue")
-  // },
-
   {
     name: "MainLayout",
     path: "/",
@@ -78,8 +61,6 @@ const routes = [
     ],
   },
 
-  // Always leave this as last one,
-  // but you can also remove it
   {
     path: "/:catchAll(.*)*",
     component: () => import("pages/ErrorNotFound.vue"),

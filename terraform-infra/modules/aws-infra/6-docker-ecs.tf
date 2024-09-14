@@ -1,10 +1,8 @@
-
 # Build docker images and push to ECR
 resource "docker_registry_image" "ingest_metrics" {
   name = "${aws_ecr_repository.repository.repository_url}:latest"
   build {
     context = "${path.cwd}/applications/ingestMetrics"
-    # dockerfile = "Dockerfile"
   }
 }
 

@@ -2,6 +2,7 @@ import boto3
 import json
 
 print("Getting Quotas")
+
 serviceQuotasClient = boto3.client("service-quotas")
 
 

@@ -2,6 +2,7 @@ import boto3
 import json
 
 print("Get Stream Details")
+
 ivsClient = boto3.client("ivs")
 
 

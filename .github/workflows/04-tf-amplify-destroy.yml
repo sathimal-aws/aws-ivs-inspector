@@ -2,9 +2,6 @@ name: 04:AWS Amplify destroy
 
 on:
   workflow_dispatch
-  # push:
-  #   branches:
-  #     - dev
 
 env:
   TF_VAR_region: "us-east-2"

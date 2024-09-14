@@ -3,6 +3,8 @@ import boto3
 from decimal import Decimal
 from datetime import datetime, timedelta
 
+print("Getting Metrics")
+
 
 def respond(err, res=None):
     return {
