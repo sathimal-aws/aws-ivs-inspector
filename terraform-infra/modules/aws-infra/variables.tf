@@ -141,6 +141,47 @@ variable "wss_apis" {
   default     = ["get-session-events", "get-live-streams"]
 }
 
+variable "wss_apis_model" {
+  description = "list of websocket api models"
+  type = list(object({
+    "$schema" = string
+    title     = string
+    type      = string
+    properties = object({
+      action = object({
+        type = "string"
+      })
+      message = object({
+        type = "string"
+      })
+    })
+    required = string
+  }))
+
+  default = [
+    {
+      "$schema" : "http://json-schema.org/draft-04/schema#",
+      "title" : "GetLiveStreamsModel",
+      "type" : "object",
+      "properties" : {
+        "action" : { "type" : "string" },
+        "message" : { "type" : "string" }
+      },
+      "required" : ["message"]
+    },
+    {
+      "$schema" : "http://json-schema.org/draft-04/schema#",
+      "title" : "GetSessionEventsModel",
+      "type" : "object",
+      "properties" : {
+        "action" : { "type" : "string" },
+        "message" : { "type" : "string" }
+      },
+      "required" : ["message"]
+    },
+  ]
+}
+
 variable "wss_api_routes" {
   description = "list of websocket api route to create"
   type = list(object({

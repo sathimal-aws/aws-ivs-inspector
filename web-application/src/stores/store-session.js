@@ -255,6 +255,8 @@ export const useSessionStore = defineStore("SessionStore", {
 
     // websocket API
     async getLiveStreams(ivsRegion) {
+      // console.log(authStore.accessToken);
+
       try {
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
