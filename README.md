@@ -71,7 +71,7 @@ This installation guide leverages GitHub Actions to streamline the deployment pr
   3.  **`03-awscli-web.yml`:** Deploys the IVS Inspector web application.
       > **Note:** The `AWS_AMPLIFY_APP_ID` variable is automatically set by the `01-tf-amplify.yml` workflow and used by `03-awscli-web.yml`.
 
-  ![05-ClickTheRunWorkflowForEach.png](documentation/screenshots/06-ClickTheRunWorkflowForEach.png)
+  ![05-ClickTheRunWorkflowForEach.png](documentation/screenshots/05-ClickTheRunWorkflowForEach.png)
 
 ## Accessing the Web Application
 
@@ -81,7 +81,7 @@ This installation guide leverages GitHub Actions to streamline the deployment pr
 4. Under "Overview" > "Production branch," click the domain link to access your deployed IVS Inspector application.
 5. You can now use the IVS Inspector web application using the default username `admin@ivs-inspector.com`, and the password `123Qwe,./`
 
-![06-IvsInspectorAppLink.png](documentation/screenshots/07-IvsInspectorAppLink.png)
+![06-IvsInspectorAppLink.png](documentation/screenshots/06-IvsInspectorAppLink.png)
 
 ## Renaming the Project
 
