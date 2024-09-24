@@ -65,20 +65,11 @@ This installation guide leverages GitHub Actions to streamline the deployment pr
    - Manually trigger the following GitHub Actions workflows in your repository, in this order:
 
      1. **`01-tf-amplify.yml`:** Deploys the AWS Amplify application.
+        > **Note:** If you're hosting the Web Application using Amplify to a desired region, you may update the value of `AWS_AMPLIFY_DEPLOYED_REGION` in the `Environment variable`.
      2. **`02-tf-infra.yml`:** Sets up the AWS infrastructure.
+        > **Note:** If you're deploying infrastructure to another or additional region to inspect the IVS Channel resources, you may update the value of `TF_VAR_region` in the workflow file `02-tf-infra.yml` at the `line #6` for each run/region. And the edit can be done within the GitHub repo.
      3. **`03-awscli-web.yml`:** Deploys the IVS Inspector web application.
-
-     7.1.) 01:AWS Amplify App (source: 01-tf-amplify.yml)
-
-     > **Note:** If you're hosting the Web Application using Amplify to a desired region, you may update the value of `AWS_AMPLIFY_DEPLOYED_REGION` in the `Environment variable`.
-
-     7.2.) 02:AWS Infra (source: 02-tf-infra.yml)
-
-     > **Note:** If you're deploying infrastructure to another or additional region to inspect the IVS Channel resources, you may update the value of `TF_VAR_region` in the workflow file `02-tf-infra.yml` at the `line #6` for each run/region. And the edit can be done within the GitHub repo.
-
-     7.3.) 03:AWS IVS Inspector web-app (source: 03-awscli-web.yml)
-
-     > **Note:** The `AWS_AMPLIFY_APP_ID` variable is automatically set by the `01-tf-amplify.yml` workflow and used by `03-awscli-web.yml`.
+        > **Note:** The `AWS_AMPLIFY_APP_ID` variable is automatically set by the `01-tf-amplify.yml` workflow and used by `03-awscli-web.yml`.
 
      ![06-ClickTheRunWorkflowForEach.png](documentation/screenshots/06-ClickTheRunWorkflowForEach.png)
 
@@ -89,6 +80,8 @@ This installation guide leverages GitHub Actions to streamline the deployment pr
 3. Select your IVS Inspector application.
 4. Under "Overview" > "Production branch," click the domain link to access your deployed IVS Inspector application.
 5. You can now use the IVS Inspector web application using the default username `admin@ivs-inspector.com`, and the password `123Qwe,./`
+
+![07-IvsInspectorAppLink.png](documentation/screenshots/07-IvsInspectorAppLink.png)
 
 ## Renaming the Project
 
