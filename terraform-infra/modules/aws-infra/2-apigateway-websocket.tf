@@ -1,12 +1,3 @@
-# authorize api requests
-resource "aws_apigatewayv2_authorizer" "authorizer" {
-  name            = "${var.project_name}-websocket-authorizer"
-  api_id          = aws_apigatewayv2_api.wss_api.id
-  authorizer_type = "JWT"
-  # authorizer_uri   = aws_lambda_function.example.invoke_arn
-  identity_sources = ["route.request.header.Auth"]
-}
-
 resource "aws_apigatewayv2_api" "wss_api" {
   for_each                   = var.wss_apis
   name                       = "${var.project_name}-wss-api-${each.key}"
