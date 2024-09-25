@@ -56,6 +56,8 @@ export default defineComponent({
           const params = {
             account_id: $route.query.account_id,
             region: $route.query.region,
+            channel_id: $route.query.channel_id,
+            session_id: $route.query.session_id,
           };
 
           $router.push({

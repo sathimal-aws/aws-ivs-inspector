@@ -36,6 +36,8 @@ export default route(async function ({ store }) {
           redirect: to.name,
           account_id: to.params.account_id,
           region: to.params.region,
+          channel_id: to.params.channel_id,
+          session_id: to.params.session_id,
         },
       });
     else if (to.name === "MainLayout") {
