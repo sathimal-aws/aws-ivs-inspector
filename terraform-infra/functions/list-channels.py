@@ -7,7 +7,7 @@ logger = logging.getLogger()
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err.message if err else json.dumps(res, default=str),
+        "body": json.dumps(err) if err else json.dumps(res, default=str),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -68,7 +68,6 @@ def lambda_handler(event, context):
             metrics.append(response)
 
         return respond(None, metrics)
-
     except Exception as e:
         logger.error(f"Error fetching metrics: {str(e)}")
         return respond(e)

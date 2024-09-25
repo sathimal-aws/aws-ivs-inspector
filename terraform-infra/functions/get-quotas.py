@@ -4,10 +4,11 @@ import boto3
 logger = logging.getLogger()
 serviceQuotasClient = boto3.client("service-quotas")
 
+
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err.message if err else json.dumps(res, default=str),
+        "body": json.dumps(err) if err else json.dumps(res, default=str),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
