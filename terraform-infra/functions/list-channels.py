@@ -1,6 +1,5 @@
 import json, logging
 import boto3
-from decimal import Decimal
 from datetime import datetime, timedelta
 
 logger = logging.getLogger()
@@ -8,17 +7,12 @@ logger = logging.getLogger()
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}, default=decimal_handler),
+        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}, default=str),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
         },
     }
-
-def decimal_handler(obj):
-    if isinstance(obj, Decimal):
-        return float(obj)
-    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event['queryStringParameters'], indent=2)}")
