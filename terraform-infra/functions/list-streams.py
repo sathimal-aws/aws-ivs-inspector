@@ -7,7 +7,7 @@ ivsClient = boto3.client("ivs")
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}, default=str),
+        "body": err.message if err else json.dumps(res, default=str),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
