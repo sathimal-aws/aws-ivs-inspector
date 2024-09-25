@@ -64,11 +64,6 @@ variable "cidr_block" {
   default     = "172.17.0.0/16"
 }
 
-variable "ec2_task_execution_role_name" {
-  description = "ECS task execution role name"
-  default     = "ecsTaskExecutionRole"
-}
-
 variable "ecs_auto_scale_role_name" {
   description = "ECS auto scale role name"
   default     = "myEcsAutoScaleRole"
@@ -139,47 +134,6 @@ variable "wss_apis" {
   description = "list of websocket api to create"
   type        = set(string)
   default     = ["get-session-events", "get-live-streams"]
-}
-
-variable "wss_apis_model" {
-  description = "list of websocket api models"
-  type = list(object({
-    "$schema" = string
-    title     = string
-    type      = string
-    properties = object({
-      action = object({
-        type = "string"
-      })
-      message = object({
-        type = "string"
-      })
-    })
-    required = string
-  }))
-
-  default = [
-    {
-      "$schema" : "http://json-schema.org/draft-04/schema#",
-      "title" : "GetLiveStreamsModel",
-      "type" : "object",
-      "properties" : {
-        "action" : { "type" : "string" },
-        "message" : { "type" : "string" }
-      },
-      "required" : ["message"]
-    },
-    {
-      "$schema" : "http://json-schema.org/draft-04/schema#",
-      "title" : "GetSessionEventsModel",
-      "type" : "object",
-      "properties" : {
-        "action" : { "type" : "string" },
-        "message" : { "type" : "string" }
-      },
-      "required" : ["message"]
-    },
-  ]
 }
 
 variable "wss_api_routes" {

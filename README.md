@@ -62,7 +62,7 @@ This installation guide leverages GitHub Actions to streamline the deployment pr
 
 **Trigger Workflows:**
 
-- Manually trigger the following GitHub Actions workflows in your repository, in this order:
+- Manually trigger the following GitHub Actions workflows in your repository with `Run Workflow` button, in the following order:
 
   1.  **`01-tf-amplify.yml`:** Deploys the AWS Amplify application.
       > **Note:** If you're hosting the Web Application using Amplify to a desired region, you may update the value of `AWS_AMPLIFY_DEPLOYED_REGION` in the `Environment variable`.
