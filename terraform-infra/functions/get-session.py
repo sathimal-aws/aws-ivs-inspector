@@ -8,7 +8,7 @@ stream_sessions_table = dynamodb.Table(f"{os.environ['project_name']}-stream-ses
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}),
+        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}, default=str),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",

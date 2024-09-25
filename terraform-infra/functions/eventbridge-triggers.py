@@ -1,16 +1,10 @@
-import json
-import logging
-import os
-import ast
-import calendar
+import json, logging, os, ast, calendar
 from time import sleep, gmtime, strftime
 
 import boto3
 import botocore.exceptions
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)  # Set log level to INFO
-
 ivs_client = boto3.client("ivs")
 lambda_client = boto3.client("lambda")
 ecs_client = boto3.client("ecs")
