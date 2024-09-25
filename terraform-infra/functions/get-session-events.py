@@ -1,7 +1,6 @@
-import json, os
+import json, logging, os
 import boto3
 import botocore.exceptions as exceptions
-import logging
 
 
 logger = logging.getLogger()
@@ -26,7 +25,7 @@ def respond(err, res=None):
 
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
-    requestContext = event["requestContext"]
+
     domainName = event["requestContext"]["domainName"]
     stage = event["requestContext"]["stage"]
     connectionId = event["requestContext"]["connectionId"]

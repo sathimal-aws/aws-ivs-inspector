@@ -1,7 +1,6 @@
-import json, os, ast
+import json, logging, os, ast
 import boto3
 import botocore.exceptions as exceptions
-import logging
 import calendar
 from time import sleep, gmtime, strftime
 

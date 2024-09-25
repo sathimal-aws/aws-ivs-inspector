@@ -26,7 +26,6 @@ def respond(err, res=None):
 
 def lambda_handler(event, context):
     connectionId = event["requestContext"]["connectionId"]
-
     try:
         live_stream_session_connection_ids_table.delete_item(
             Key={

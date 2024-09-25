@@ -1,7 +1,6 @@
-import os, json
+import json, logging, os
 import boto3
 import botocore.exceptions as exceptions
-import logging
 
 logger = logging.getLogger()
 dynamodb = boto3.resource("dynamodb")

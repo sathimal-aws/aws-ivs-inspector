@@ -18,7 +18,8 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    print("event:", event)
+    print("Received event: " + json.dumps(event["queryStringParameters"], indent=2))
+
     cloudWatchClient = boto3.client(
         "cloudwatch", region_name=event["queryStringParameters"]["regionName"]
     )
