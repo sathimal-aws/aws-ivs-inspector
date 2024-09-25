@@ -1,16 +1,27 @@
-import json
+import json, logging
 
-print("Get Session Events Connections")
+logger = logging.getLogger()
 
-
-def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
-
-    data = {
-        "requestId": event["requestContext"]["requestId"],
-        "connectionId": event["requestContext"]["connectionId"],
+def respond(err, res=None):
+    return {
+        "statusCode": 400 if err else 200,
+        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}),
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
     }
 
-    print(data)
+def lambda_handler(event, context):
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")
 
-    return {"statusCode": 200, "body": json.dumps("opened!")}
+    try:
+        # It's good practice to log the connection ID for debugging
+        connection_id = event["requestContext"]["connectionId"]
+        logger.info(f"Connection ID: {connection_id} connected.")
+
+        return respond(None, "Connection established successfully!")
+
+    except Exception as e:
+        logger.error(f"Error establishing connection: {str(e)}")
+        return respond(e)

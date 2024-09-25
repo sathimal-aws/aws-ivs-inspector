@@ -1,98 +1,84 @@
-import ast
-import os
-import boto3
-import json
-import botocore.exceptions as exceptions 
-import logging
-from time import sleep
+import ast, json, logging, os
 from datetime import datetime, timedelta
-
+from time import sleep
+import boto3
+import botocore.exceptions
 from decimal import Decimal
 
 logger = logging.getLogger()
-
 dynamodb = boto3.resource("dynamodb")
 
 
-def lambda_handler(event):
-    print("Received event json: " + json.dumps(event, indent=2, default=str))
-    ingestLogsTable = dynamodb.Table(event["DbTableName"])
-    cloudWatchClient = boto3.client("cloudwatch", region_name=event["RegionName"])
+def main(event):
+    """Collects and stores ingest metrics from CloudWatch to DynamoDB."""
 
-    isStreamLive = True
+    logger.info(f"Received event: {json.dumps(event, indent=2, default=str)}")
+    ingest_logs_table = dynamodb.Table(event["DbTableName"])
+    cloudwatch_client = boto3.client("cloudwatch", region_name=event["RegionName"])
 
-    startTime = event["StartTime"]
+    start_time = event["StartTime"]
 
     try:
-        print("MetricName:", event["MetricName"])
-        ingestLogsTable.update_item(
-            Key={
-                "streamId": event["StreamId"],
-                "channelId": event["ChannelId"],
-            },
-            UpdateExpression="set #metricName = :value",
-            ConditionExpression="attribute_not_exists(#metricName)",
-            ExpressionAttributeNames={
-                "#metricName": event["MetricName"],
-            },
-            ExpressionAttributeValues={":value": {}},
-            ReturnValues="UPDATED_NEW",
+        # Create the metric entry in DynamoDB if it doesn't exist
+        ingest_logs_table.update_item(
+            Key={"streamId": event["StreamId"], "channelId": event["ChannelId"]},
+            UpdateExpression="set #metricName = if_not_exists(#metricName, :emptyMap)",
+            ExpressionAttributeNames={"#metricName": event["MetricName"]},
+            ExpressionAttributeValues={":emptyMap": {}},
         )
-        while isStreamLive:
-            metrics = cloudWatchClient.get_metric_statistics(
+
+        while True:  # Run indefinitely until the function is stopped or an error occurs
+            metrics = cloudwatch_client.get_metric_statistics(
                 Namespace="AWS/IVS",
                 MetricName=event["MetricName"],
-                Dimensions=[
-                    {"Name": "Channel", "Value": event["ChannelId"]},
-                ],
-                StartTime=startTime,
+                Dimensions=[{"Name": "Channel", "Value": event["ChannelId"]}],
+                StartTime=start_time,
                 EndTime=datetime.now(),
                 Period=int(event["Period"]),
                 Statistics=ast.literal_eval(event["Statistics"]),
                 Unit=event["Unit"],
             )
 
-            print('metrics["Datapoints"]:', metrics["Datapoints"])
+            logger.debug(f'metrics["Datapoints"]: {metrics["Datapoints"]}')
 
-            if len(metrics["Datapoints"]) > 0:
-                sortedDate = sorted(
+            if metrics["Datapoints"]:
+                # Sort datapoints by timestamp in descending order
+                sorted_data = sorted(
                     metrics["Datapoints"], key=lambda x: x["Timestamp"], reverse=True
                 )
-                startTime = sortedDate[0]["Timestamp"] - timedelta(minutes=1)
+                # Update start_time for the next iteration
+                start_time = sorted_data[0]["Timestamp"] - timedelta(minutes=1)
 
-                for data in sortedDate:
-                    ingestLogsTable.update_item(
-                        Key={
-                            "streamId": event["StreamId"],
-                            "channelId": event["ChannelId"],
-                        },
-                        UpdateExpression="set #metricName.#eventTime = :metricValues",
+                for datapoint in sorted_data:
+                    event_time = str(int(datetime.timestamp(datapoint["Timestamp"])))
+                    ingest_logs_table.update_item(
+                        Key={"streamId": event["StreamId"], "channelId": event["ChannelId"]},
+                        UpdateExpression="set #metricName.#eventTime = :metricValue",
                         ExpressionAttributeNames={
                             "#metricName": event["MetricName"],
-                            "#eventTime": str(
-                                int(datetime.timestamp(data["Timestamp"]))
-                            ),
+                            "#eventTime": event_time,
                         },
                         ExpressionAttributeValues={
-                            ":metricValues": round(Decimal(f'{data["Average"]}'), 3),
+                            ":metricValue": round(Decimal(datapoint["Average"]), 3)
                         },
-                        ReturnValues="UPDATED_NEW",
                     )
+
             sleep(int(event["EveryNSecond"]))
 
-    except exceptions.ClientError as err:
+    except botocore.exceptions.ClientError as err:
         logger.error(
-            "Couldn't add metric %s in table %s. Here's why: %s: %s",
+            "Couldn't add metric %s to table %s. Error: %s: %s",
             event["MetricName"],
-            ingestLogsTable,
+            ingest_logs_table.table_name,
             err.response["Error"]["Code"],
             err.response["Error"]["Message"],
         )
-        raise
+        raise  # Re-raise the exception to stop the function execution
 
-    return {
-        "statusCode": 200,
-    }
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise  # Re-raise the exception to stop the function execution
 
 
-lambda_handler(os.environ)
+if __name__ == "__main__":
+    main(os.environ)

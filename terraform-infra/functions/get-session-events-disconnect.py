@@ -4,18 +4,15 @@ import botocore.exceptions as exceptions
 
 logger = logging.getLogger()
 dynamodb = boto3.resource("dynamodb")
-from boto3.dynamodb.conditions import Key, Attr
-
-print("Get Session Events Disconnections")
-
-
-stream_state_events_table = dynamodb.Table(f"{os.environ['project_name']}-state-events")
+stream_state_events_table = dynamodb.Table(
+    f"{os.environ['project_name']}-state-events"
+)
 
 
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err.message if err else res,
+        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -24,44 +21,44 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")
     try:
-        connectionId = event["requestContext"]["connectionId"]
-        print("connectionId:", connectionId)
+        connection_id = event["requestContext"]["connectionId"]
+        logger.info(f"Connection ID: {connection_id}")
 
-        data = stream_state_events_table.scan(
-            FilterExpression=Attr("connectionIds").contains(connectionId)
+        # Find the stream details associated with the connection ID
+        response = stream_state_events_table.scan(
+            FilterExpression="contains(connectionIds, :connectionId)",
+            ExpressionAttributeValues={":connectionId": connection_id},
         )
 
-        streamDetails = data["Items"][0]
+        if response['Items']:
+            stream_details = response['Items'][0]
+            logger.info(f"Stream details: {stream_details}")
 
-        print("streamDetails:", streamDetails)
+            # Remove the connection ID from the list
+            stream_details['connectionIds'].remove(connection_id)
 
-        if "connectionIds" in streamDetails:
-            print("connectionIds before: ", streamDetails["connectionIds"])
-            streamDetails["connectionIds"].remove(connectionId)
-            print("connectionIds after: ", streamDetails["connectionIds"])
+            # Update the DynamoDB table
             stream_state_events_table.update_item(
                 Key={
-                    "streamId": streamDetails["streamId"],
-                    "channelArn": streamDetails["channelArn"],
+                    "streamId": stream_details["streamId"],
+                    "channelArn": stream_details["channelArn"],
                 },
-                UpdateExpression="set #connectionIds =:connectionIds",
-                ExpressionAttributeNames={"#connectionIds": "connectionIds"},
-                ExpressionAttributeValues={
-                    ":connectionIds": streamDetails["connectionIds"],
-                },
-                ReturnValues="UPDATED_NEW",
+                UpdateExpression="set connectionIds = :connectionIds",
+                ExpressionAttributeValues={":connectionIds": stream_details["connectionIds"]},
             )
 
-            return respond(None, "connection ID deleted!")
+            return respond(None, "Connection ID deleted successfully")
+        else:
+            return respond(None, "Connection ID not found in any stream")
 
     except exceptions.ClientError as err:
         logger.error(
-            "Couldn't add connectionId %s in table %s. Here's why: %s: %s",
-            connectionId,
-            stream_state_events_table,
-            err.response["Error"]["Code"],
-            err.response["Error"]["Message"],
+            f"Error removing connectionId {connection_id} from table {stream_state_events_table.table_name}: "
+            f"{err.response['Error']['Code']}: {err.response['Error']['Message']}"
         )
-        raise
+        return respond(err)
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return respond(e)

@@ -1,4 +1,4 @@
-FROM demisto/boto3py3:1.0.0.86713
+FROM public.ecr.aws/lambda/python:3.9
 
 WORKDIR /usr/src
 

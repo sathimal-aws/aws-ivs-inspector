@@ -1,13 +1,19 @@
-import json, logging, os, ast
-import boto3
-import botocore.exceptions as exceptions
+import json
+import logging
+import os
+import ast
 import calendar
 from time import sleep, gmtime, strftime
 
+import boto3
+import botocore.exceptions
+
 logger = logging.getLogger()
-ivsClient = boto3.client("ivs")
-lambdaClient = boto3.client("lambda")
-ecsClient = boto3.client("ecs")
+logger.setLevel(logging.INFO)  # Set log level to INFO
+
+ivs_client = boto3.client("ivs")
+lambda_client = boto3.client("lambda")
+ecs_client = boto3.client("ecs")
 dynamodb = boto3.resource("dynamodb")
 
 stream_state_events_table = dynamodb.Table(f"{os.environ['project_name']}-state-events")
@@ -18,237 +24,160 @@ live_stream_session_connection_ids_table = dynamodb.Table(
 
 now = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 
+METRICS_TO_COLLECT = [
+    {
+        "name": "IngestVideoBitrate",
+        "unit": "Bits/Second",
+        "statistics": '["Average", "Maximum", "Minimum"]',
+    },
+    {
+        "name": "IngestAudioBitrate",
+        "unit": "Bits/Second",
+        "statistics": '["Average", "Maximum", "Minimum"]',
+    },
+    {
+        "name": "IngestFramerate",
+        "unit": "Count/Second",
+        "statistics": '["Average", "Maximum", "Minimum"]',
+    },
+    {
+        "name": "KeyframeInterval",
+        "unit": "Seconds",
+        "statistics": '["Average", "Maximum", "Minimum"]',
+    },
+    {
+        "name": "ConcurrentViews",
+        "unit": "Count",
+        "statistics": '["Average", "Maximum", "Minimum"]',
+    },
+]
 
-def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2, default=str))
-    print("Received context: " + json.dumps(context, indent=2, default=str))
+def update_stream_state_events(event):
+    """Updates the stream state events table with the given event."""
+    detail_type = event["detail-type"]
+    detail = event["detail"]
+    event_id = event["id"]
+    stream_id = detail["stream_id"]
+    channel_arn = event["resources"][0]
 
-    eventNameExists = (
-        "event_name" in event["detail"]
-        and event["detail-type"] == "IVS Stream State Change"
-    )
-
-    print("eventNameExists:", eventNameExists)
-
-    # add or update ivsStreamStateChange DB
-    if eventNameExists and event["detail"]["event_name"] == "Session Created":
-        try:
-            streamStateDetails = {
-                "streamId": event["detail"]["stream_id"],
-                "channelArn": event["resources"][0],
-                "channelName": event["detail"]["channel_name"],
-                "detailType": event["detail-type"],
-                "events": {
-                    event["id"]: {
-                        "name": event["detail"]["event_name"],
+    try:
+        if detail_type == "IVS Recording State Change":
+            stream_state_events_table.update_item(
+                Key={"streamId": stream_id, "channelArn": channel_arn},
+                UpdateExpression="set events.#id = :eventValues",
+                ExpressionAttributeNames={"#id": event_id},
+                ExpressionAttributeValues={
+                    ":eventValues": {
+                        "name": detail["recording_status"],
+                        "recordingSessionId": detail.get("recording_session_id"),
                         "time": event["time"],
-                    },
+                    }
                 },
-            }
-
-            stream_state_events_table.put_item(Item=streamStateDetails)
-        except exceptions.ClientError as err:
-            logger.error(
-                "Couldn't add event %s in table %s. Here's why: %s: %s",
-                event["detail"]["event_name"],
-                stream_state_events_table,
-                err.response["Error"]["Code"],
-                err.response["Error"]["Message"],
+                ReturnValues="UPDATED_NEW",
             )
-            raise
-
-    else:
-        try:
-            print("detail-type: ", event["detail-type"])
-            print("detail: ", json.dumps(event["detail"], indent=4))
-            if event["detail-type"] == "IVS Recording State Change":
-                stream_state_events_table.update_item(
-                    Key={
-                        "streamId": event["detail"]["stream_id"],
-                        "channelArn": event["resources"][0],
-                    },
-                    UpdateExpression="set events.#id = :eventValues",
-                    ExpressionAttributeNames={"#id": event["id"]},
-                    ExpressionAttributeValues={
-                        ":eventValues": {
-                            "name": event["detail"]["recording_status"],
-                            "recordingSessionId": event["detail"][
-                                "recording_session_id"
-                            ],
-                            "time": event["time"],
-                        }
-                    },
-                    ReturnValues="UPDATED_NEW",
-                )
-            elif event["detail-type"] == "IVS Limit Breach":
-                stream_state_events_table.update_item(
-                    Key={
-                        "streamId": event["detail"]["stream_id"],
-                        "channelArn": event["resources"][0],
-                    },
-                    UpdateExpression="set events.#id = :eventValues",
-                    ExpressionAttributeNames={"#id": event["id"]},
-                    ExpressionAttributeValues={
-                        ":eventValues": {
-                            "name": event["detail"]["limit"],
-                            "time": event["time"],
-                            "limitUnit": event["detail"]["limit_unit"],
-                            "limitValue": event["detail"]["limit_value"],
-                            "exceededBy": event["detail"]["exceeded_by"],
-                        }
-                    },
-                    ReturnValues="UPDATED_NEW",
-                )
-            else:
-                stream_state_events_table.update_item(
-                    Key={
-                        "streamId": event["detail"]["stream_id"],
-                        "channelArn": event["resources"][0],
-                    },
-                    UpdateExpression="set events.#id = :eventValues",
-                    ExpressionAttributeNames={"#id": event["id"]},
-                    ExpressionAttributeValues={
-                        ":eventValues": {
-                            "name": event["detail"]["event_name"],
-                            "time": event["time"],
-                        }
-                    },
-                    ReturnValues="UPDATED_NEW",
-                )
-        except exceptions.ClientError as err:
-            logger.error(
-                "Couldn't update event %s in table %s. Here's why: %s: %s",
-                json.dumps(event["detail"], indent=4),
-                stream_state_events_table,
-                err.response["Error"]["Code"],
-                err.response["Error"]["Message"],
+        elif detail_type == "IVS Limit Breach":
+            stream_state_events_table.update_item(
+                Key={"streamId": stream_id, "channelArn": channel_arn},
+                UpdateExpression="set events.#id = :eventValues",
+                ExpressionAttributeNames={"#id": event_id},
+                ExpressionAttributeValues={
+                    ":eventValues": {
+                        "name": detail["limit"],
+                        "time": event["time"],
+                        "limitUnit": detail["limit_unit"],
+                        "limitValue": detail["limit_value"],
+                        "exceededBy": detail["exceeded_by"],
+                    }
+                },
+                ReturnValues="UPDATED_NEW",
             )
-            raise
+        else:
+            stream_state_events_table.update_item(
+                Key={"streamId": stream_id, "channelArn": channel_arn},
+                UpdateExpression="set events.#id = :eventValues",
+                ExpressionAttributeNames={"#id": event_id},
+                ExpressionAttributeValues={
+                    ":eventValues": {"name": detail["event_name"], "time": event["time"]}
+                },
+                ReturnValues="UPDATED_NEW",
+            )
+    except botocore.exceptions.ClientError as err:
+        logger.error(
+            "Couldn't update event %s in table %s. Error: %s: %s",
+            json.dumps(event["detail"], indent=4),
+            stream_state_events_table.table_name,
+            err.response["Error"]["Code"],
+            err.response["Error"]["Message"],
+        )
+        raise
 
-    # sending event update to client application which are connected with websocket API
-    streamEventDetails = stream_state_events_table.get_item(
-        Key={
-            "streamId": event["detail"]["stream_id"],
-            "channelArn": event["resources"][0],
-        },
+def send_websocket_updates(event):
+    """Sends WebSocket updates to connected clients."""
+    stream_id = event["detail"]["stream_id"]
+    channel_arn = event["resources"][0]
+
+    # Send event update to clients connected to the session events WebSocket API
+    stream_event_details = stream_state_events_table.get_item(
+        Key={"streamId": stream_id, "channelArn": channel_arn}
     )
-    print("streamEventDetails:", streamEventDetails)
-
-    if "connectionIds" in streamEventDetails["Item"]:
-        liveStreamEventsWebsocket = boto3.client(
+    if "Item" in stream_event_details and "connectionIds" in stream_event_details["Item"]:
+        live_stream_events_websocket = boto3.client(
             "apigatewaymanagementapi",
             endpoint_url=f"https://{os.environ['wss_get_session_events_api_id']}.execute-api.{os.environ['region']}.amazonaws.com/ivs",
         )
-        connectionIds = streamEventDetails["Item"]["connectionIds"]
-        for connectionId in connectionIds:
-            print("Event Connection ID:", connectionId)
-            response = liveStreamEventsWebsocket.post_to_connection(
-                ConnectionId=connectionId,
-                Data=json.dumps(
-                    streamEventDetails["Item"]["events"], default=str
-                ).encode(),
-            )
-            print(f"{connectionId} response", response)
+        for connection_id in stream_event_details["Item"]["connectionIds"]:
+            try:
+                live_stream_events_websocket.post_to_connection(
+                    ConnectionId=connection_id,
+                    Data=json.dumps(stream_event_details["Item"]["events"], default=str).encode(),
+                )
+            except botocore.exceptions.ClientError as err:
+                logger.error(f"Error sending to connection {connection_id}: {err}")
 
-    # sending live stream start and end update to the client application which are connected with websocket API
-    if eventNameExists and (
-        event["detail"]["event_name"] == "Session Created"
-        or event["detail"]["event_name"] == "Session Ended"
-    ):
-        liveStreamSessionsWebsocket = boto3.client(
+    # Send live stream start/end updates to clients connected to the live streams WebSocket API
+    event_name = event["detail"]["event_name"]
+    if event_name in ("Session Created", "Session Ended"):
+        live_stream_sessions_websocket = boto3.client(
             "apigatewaymanagementapi",
             endpoint_url=f"https://{os.environ['wss_get_live_streams_api_id']}.execute-api.{os.environ['region']}.amazonaws.com/ivs",
         )
+        live_stream_session_connections = live_stream_session_connection_ids_table.scan()
+        for item in live_stream_session_connections.get("Items", []):
+            try:
+                live_stream_sessions_websocket.post_to_connection(
+                    ConnectionId=item["connectionId"],
+                    Data=json.dumps(event, default=str).encode(),
+                )
+            except botocore.exceptions.ClientError as err:
+                logger.error(f"Error sending to connection {item['connectionId']}: {err}")
 
-        liveStreamSessionConnectionIds = live_stream_session_connection_ids_table.scan()
+def start_ingest_metrics_collection(event):
+    """Starts ECS tasks to collect ingest metrics."""
+    stream_id = event["detail"]["stream_id"]
+    channel_arn = event["resources"][0]
+    channel_id = channel_arn.split("/")[1]
 
-        print(
-            "liveStreamSessionConnectionIds:",
-            liveStreamSessionConnectionIds["Items"],
+    try:
+        ivs_get_stream_session_response = ivs_client.get_stream_session(
+            channelArn=channel_arn, streamId=stream_id
         )
+        stream_session = ivs_get_stream_session_response["streamSession"]
 
-        for item in liveStreamSessionConnectionIds["Items"]:
-            print("live Stream Connection ID:", item["connectionId"])
-            response = liveStreamSessionsWebsocket.post_to_connection(
-                ConnectionId=item["connectionId"],
-                Data=json.dumps(
-                    event,
-                    default=str,
-                ).encode(),
-            )
-            print(f"{item['connectionId']} response", response)
-
-    # metrics to collect
-    metricsToCollect = [
-        {
-            "name": "IngestVideoBitrate",
-            "unit": "Bits/Second",
-            "statistics": '["Average", "Maximum", "Minimum"]',
-        },
-        {
-            "name": "IngestAudioBitrate",
-            "unit": "Bits/Second",
-            "statistics": '["Average", "Maximum", "Minimum"]',
-        },
-        {
-            "name": "IngestFramerate",
-            "unit": "Count/Second",
-            "statistics": '["Average", "Maximum", "Minimum"]',
-        },
-        {
-            "name": "KeyframeInterval",
-            "unit": "Seconds",
-            "statistics": '["Average", "Maximum", "Minimum"]',
-        },
-        {
-            "name": "ConcurrentViews",
-            "unit": "Count",
-            "statistics": '["Average", "Maximum", "Minimum"]',
-        },
-    ]
-
-    # Run all ECS tasks that collects metrics and saves into the DynamoDB ivs-ingest-metrics table
-    if eventNameExists and event["detail"]["event_name"] == "Stream Start":
-        print("getting stream session details")
-        ivsGetStreamSessionResponse = ivsClient.get_stream_session(
-            channelArn=event["resources"][0], streamId=event["detail"]["stream_id"]
-        )
-
-        print(
-            "ivsGetStreamSessionResponse: ",
-            ivsGetStreamSessionResponse["streamSession"],
-        )
-
-        streamSessionsDetails = {
-            "streamId": ivsGetStreamSessionResponse["streamSession"]["streamId"],
-            "channelArn": ivsGetStreamSessionResponse["streamSession"]["channel"][
-                "arn"
-            ],
-            "channel": ivsGetStreamSessionResponse["streamSession"]["channel"],
-            "ingestConfiguration": ivsGetStreamSessionResponse["streamSession"][
-                "ingestConfiguration"
-            ],
-            "recordingConfiguration": (
-                ivsGetStreamSessionResponse["streamSession"]["recordingConfiguration"]
-                if "recordingConfiguration"
-                in ivsGetStreamSessionResponse["streamSession"]
-                else None
-            ),
-            "startTime": calendar.timegm(
-                ivsGetStreamSessionResponse["streamSession"]["startTime"].timetuple()
-            ),
+        stream_session_details = {
+            "streamId": stream_session["streamId"],
+            "channelArn": stream_session["channel"]["arn"],
+            "channel": stream_session["channel"],
+            "ingestConfiguration": stream_session["ingestConfiguration"],
+            "recordingConfiguration": stream_session.get("recordingConfiguration"),
+            "startTime": calendar.timegm(stream_session["startTime"].timetuple()),
             "ecsTaskIds": {},
         }
 
-        channelId = event["resources"][0].split("/")[1]
-        # streamId = event["detail"]["stream_id"]
-
-        for metric in metricsToCollect:
-            print(f'invoking ECS to get {metric["name"]}')
-            environmentVariables = [
+        for metric in METRICS_TO_COLLECT:
+            environment_variables = [
                 {"name": "MetricName", "value": metric["name"]},
-                {"name": "ChannelId", "value": channelId},
-                {"name": "StreamId", "value": event["detail"]["stream_id"]},
+                {"name": "ChannelId", "value": channel_id},
+                {"name": "StreamId", "value": stream_id},
                 {"name": "Unit", "value": metric["unit"]},
                 {"name": "Statistics", "value": metric["statistics"]},
                 {"name": "StartTime", "value": event["time"]},
@@ -259,15 +188,7 @@ def lambda_handler(event, context):
                 {"name": "EveryNSecond", "value": "10"},
             ]
 
-            print(
-                "revision:",
-                os.environ["ecs_task_definition_revision"],
-            )
-            print("subnet_ids: ", ast.literal_eval(os.environ["vpc_subnets"]))
-            print("security_groups: ", os.environ["vpc_security_groups"])
-            print("os.environ:", os.environ)
-
-            ecsRunTaskResponse = ecsClient.run_task(
+            ecs_run_task_response = ecs_client.run_task(
                 cluster=f"{os.environ['project_name']}-ingest-metrics-cluster",
                 count=1,
                 enableECSManagedTags=True,
@@ -284,7 +205,7 @@ def lambda_handler(event, context):
                     "containerOverrides": [
                         {
                             "name": f"{os.environ['project_name']}-ingest-metrics-container",
-                            "environment": environmentVariables,
+                            "environment": environment_variables,
                         },
                     ],
                 },
@@ -294,53 +215,68 @@ def lambda_handler(event, context):
                 taskDefinition=f"{os.environ['project_name']}-ingest-metrics-task-definition:{os.environ['ecs_task_definition_revision']}",
             )
 
-            print(
-                "ecsRunTaskResponse:",
-                json.dumps(ecsRunTaskResponse["tasks"][0], indent=2, default=str),
-            )
+            task_arn = ecs_run_task_response["tasks"][0]["taskArn"].split("/")[2]
+            stream_session_details["ecsTaskIds"][metric["name"]] = task_arn
 
-            print(
-                "ecsRunTaskTaskArnResponse:",
-                json.dumps(
-                    ecsRunTaskResponse["tasks"][0]["taskArn"], indent=2, default=str
-                ),
-            )
+        stream_sessions_table.put_item(Item=stream_session_details)
 
-            streamSessionsDetails["ecsTaskIds"][metric["name"]] = ecsRunTaskResponse[
-                "tasks"
-            ][0]["taskArn"].split("/")[2]
+    except (botocore.exceptions.ClientError, KeyError) as err:
+        logger.error(f"Error starting ingest metrics collection: {err}")
 
-            print(
-                "ivsGetStreamSessionResponse:",
-                json.dumps(streamSessionsDetails, indent=2, default=str),
-            )
+def stop_ingest_metrics_collection(event):
+    """Stops ECS tasks that are collecting ingest metrics."""
+    stream_id = event["detail"]["stream_id"]
+    channel_arn = event["resources"][0]
 
-        stream_sessions_table.put_item(Item=streamSessionsDetails)
-
-    # Stop all ECS tasks that collects metrics and saves into the DynamoDB ivs-ingest-metrics table
-    elif eventNameExists and event["detail"]["event_name"] == "Stream End":
-        print("streamId:", event["detail"]["stream_id"])
-        streamSessionsDetails = stream_sessions_table.get_item(
-            Key={
-                "streamId": event["detail"]["stream_id"],
-                "channelArn": event["resources"][0],
-            }
+    try:
+        stream_session_details = stream_sessions_table.get_item(
+            Key={"streamId": stream_id, "channelArn": channel_arn}
         )
-        print("Ended:streamSessionsDetails:", streamSessionsDetails)
 
-        sleep(30)
+        sleep(30)  # Wait for a short period to allow metrics collection to finish
 
-        for metric in metricsToCollect:
-            ecsStopTaskResponse = ecsClient.stop_task(
+        for metric_name, task_id in stream_session_details["Item"]["ecsTaskIds"].items():
+            ecs_client.stop_task(
                 cluster=f"{os.environ['project_name']}-ingest-metrics-cluster",
-                task=streamSessionsDetails["Item"]["ecsTaskIds"][metric["name"]],
-                reason=f'Session with ID: {event["detail"]["stream_id"]} ended',
+                task=task_id,
+                reason=f"Session with ID: {stream_id} ended",
             )
 
-            ecsTaskLastStatus = ecsStopTaskResponse["task"]["lastStatus"]
-            ecsTaskDesiredStatus = ecsStopTaskResponse["task"]["desiredStatus"]
+    except (botocore.exceptions.ClientError, KeyError) as err:
+        logger.error(f"Error stopping ingest metrics collection: {err}")
 
-            print("ecsTaskLastStatus:", ecsTaskLastStatus)
-            print("ecsTaskDesiredStatus:", ecsTaskDesiredStatus)
+def lambda_handler(event, context):
+    """Handles EventBridge events related to IVS streams."""
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")
 
-    return {"statusCode": 200, "body": json.dumps("metrics initiated successfully")}
+    event_name = event["detail"].get("event_name")
+    is_stream_state_change = event["detail-type"] == "IVS Stream State Change"
+
+    try:
+        if is_stream_state_change:
+            if event_name == "Session Created":
+                stream_state_details = {
+                    "streamId": event["detail"]["stream_id"],
+                    "channelArn": event["resources"][0],
+                    "channelName": event["detail"]["channel_name"],
+                    "detailType": event["detail-type"],
+                    "events": {
+                        event["id"]: {"name": event_name, "time": event["time"]},
+                    },
+                }
+                stream_state_events_table.put_item(Item=stream_state_details)
+            else:
+                update_stream_state_events(event)
+
+            send_websocket_updates(event)
+
+        if is_stream_state_change and event_name == "Stream Start":
+            start_ingest_metrics_collection(event)
+        elif is_stream_state_change and event_name == "Stream End":
+            stop_ingest_metrics_collection(event)
+
+        return {"statusCode": 200, "body": json.dumps("Event processed successfully")}
+
+    except Exception as e:
+        logger.error(f"Error processing event: {str(e)}")
+        return {"statusCode": 500, "body": json.dumps(f"Error processing event: {str(e)}")}

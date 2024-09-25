@@ -1,15 +1,13 @@
-import json
+import json, logging
 import boto3
 
-print("List Streams")
-
+logger = logging.getLogger()
 ivsClient = boto3.client("ivs")
-
 
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err.message if err else res,
+        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -18,11 +16,14 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event["queryStringParameters"], indent=2))
+    logger.info(f"Received event: {json.dumps(event["queryStringParameters"], indent=2)}")        
+    try:
+        nextToken = event["queryStringParameters"].get("nextToken")
+        ivsListStreamsResponse = ivsClient.list_streams(
+            nextToken=nextToken if nextToken else None,
+            maxResults=100,
+        )
 
-    ivsListStreamsResponse = ivsClient.list_streams(
-        maxResults=100,
-        nextToken=event["queryStringParameters"]["nextToken"],
-    )
-
-    return respond(None, json.dumps(ivsListStreamsResponse, indent=2, default=str))
+        return respond(None, ivsListStreamsResponse)
+    except Exception as e:
+        return respond(e)

@@ -2,20 +2,14 @@ import json, logging, os
 import boto3
 import botocore.exceptions as exceptions
 
-
 logger = logging.getLogger()
-
 dynamodb = boto3.resource("dynamodb")
-
 stream_state_events_table = dynamodb.Table(f"{os.environ['project_name']}-state-events")
-
-print("Get Session Events")
-
 
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err.message if err else res,
+        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -24,54 +18,53 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
-
-    domainName = event["requestContext"]["domainName"]
-    stage = event["requestContext"]["stage"]
-    connectionId = event["requestContext"]["connectionId"]
-
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")
     try:
+        connection_id = event["requestContext"]["connectionId"]
         body = json.loads(event["body"])
-        print("streamId:", body["message"]["streamId"])
-        print("channelArn:", body["message"]["channelArn"])
+        stream_id = body["message"]["streamId"]
+        channel_arn = body["message"]["channelArn"]
+
+        # Atomically add connection ID to list if it doesn't exist
         stream_state_events_table.update_item(
             Key={
-                "streamId": body["message"]["streamId"],
-                "channelArn": body["message"]["channelArn"],
+                "streamId": stream_id,
+                "channelArn": channel_arn,
             },
             UpdateExpression="set #connectionIds = list_append(if_not_exists(#connectionIds, :emptyList), :connectionId)",
             ExpressionAttributeNames={"#connectionIds": "connectionIds"},
             ExpressionAttributeValues={
-                ":connectionId": [connectionId],
+                ":connectionId": [connection_id],
                 ":emptyList": [],
             },
             ReturnValues="UPDATED_NEW",
         )
 
-        streamEventDetails = stream_state_events_table.get_item(
+        # Retrieve and send back the current events
+        stream_event_details = stream_state_events_table.get_item(
             Key={
-                "streamId": body["message"]["streamId"],
-                "channelArn": body["message"]["channelArn"],
+                "streamId": stream_id,
+                "channelArn": channel_arn,
             },
         )
-        print("streamEventDetails:", streamEventDetails)
 
-        websocketClient = boto3.client(
+        websocket_client = boto3.client(
             "apigatewaymanagementapi",
-            endpoint_url=f"https://{domainName}/{stage}",
+            endpoint_url=f"https://{event['requestContext']['domainName']}/{event['requestContext']['stage']}",
         )
-        response = websocketClient.post_to_connection(
-            ConnectionId=connectionId,
-            Data=json.dumps(streamEventDetails["Item"]["events"], default=str).encode(),
+        response = websocket_client.post_to_connection(
+            ConnectionId=connection_id,
+            Data=json.dumps(stream_event_details["Item"]["events"], default=str).encode(),
         )
-        return respond(None, json.dumps(response, indent=2, default=str))
+
+        return respond(None, response)
 
     except exceptions.ClientError as err:
         logger.error(
-            "Couldn't add connectionId %s in table %s. Here's why: %s: %s",
-            connectionId,
-            stream_state_events_table,
-            err.response["Error"]["Code"],
-            err.response["Error"]["Message"],
+            f"Error adding connectionId {connection_id} to table {stream_state_events_table.table_name}: "
+            f"{err.response['Error']['Code']}: {err.response['Error']['Message']}"
         )
-        raise
+        return respond(err)
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return respond(e)

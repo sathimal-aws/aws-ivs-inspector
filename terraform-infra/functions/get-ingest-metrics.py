@@ -1,18 +1,15 @@
-import json, os
+import json, logging, os
 import boto3
 
-print("Getting Ingest Metrics")
-
+logger = logging.getLogger()
 dynamodb = boto3.resource("dynamodb")
-ivsClient = boto3.client("ivs")
-stream_state_events_table = dynamodb.Table(f"{os.environ['project_name']}-state-events")
 ingest_metrics_table = dynamodb.Table(f"{os.environ['project_name']}-ingest-metrics")
 
 
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err.message if err else res,
+        "body": json.dumps({"message": err.message}) if err else json.dumps({"message": res}, default=str),
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -21,14 +18,23 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event["queryStringParameters"], indent=2))
-    data = ingest_metrics_table.get_item(
-        Key={
-            "streamId": event["queryStringParameters"]["stream_id"],
-            "channelId": event["queryStringParameters"]["channel_id"],
-        }
-    )
+    logger.info(f"Received event: {json.dumps(event['queryStringParameters'], indent=2)}")
 
-    print(json.dumps(data, indent=2, default=str))
-    if data["Item"]:
-        return respond(None, json.dumps(data["Item"], indent=2, default=str))
+    try:
+        data = ingest_metrics_table.get_item(
+            Key={
+                "streamId": event["queryStringParameters"]["stream_id"],
+                "channelId": event["queryStringParameters"]["channel_id"],
+            }
+        )
+
+        if "Item" in data:
+            logger.info(f"Retrieved ingest metrics: {json.dumps(data['Item'], indent=2, default=str)}")
+            return respond(None, data["Item"])
+        else:
+            logger.info(f"No ingest metrics found for stream ID: {event['queryStringParameters']['stream_id']} and channel ID: {event['queryStringParameters']['channel_id']}")
+            return respond(None, {})  # Return an empty dictionary if no item is found
+
+    except Exception as e:
+        logger.error(f"Error fetching ingest metrics: {str(e)}")
+        return respond(e)
