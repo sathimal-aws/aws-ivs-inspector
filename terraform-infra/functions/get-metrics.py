@@ -68,7 +68,7 @@ def lambda_handler(event, context):
             )
             metrics.append(response)
 
-        return respond(None, metrics)
+        return respond(None, json.dumps(metrics, default=str))
 
     except Exception as e:
         logger.error(f"Error fetching metrics: {str(e)}")

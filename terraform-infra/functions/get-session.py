@@ -16,7 +16,7 @@ def respond(err, res=None):
     }
 
 def lambda_handler(event, context):
-    logger.info(f"Received event: {json.dumps(event["queryStringParameters"], indent=2)}")        
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")        
     try:
         streamSessionsDetails = stream_sessions_table.get_item(
             Key={
@@ -30,4 +30,5 @@ def lambda_handler(event, context):
         else:
             return respond(None, {}) 
     except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
         return respond(e) 

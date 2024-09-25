@@ -28,4 +28,5 @@ def lambda_handler(event, context):
 
         return respond(None, json.dumps(listServiceQuotasResponse, default=str))
     except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
         return respond(e)

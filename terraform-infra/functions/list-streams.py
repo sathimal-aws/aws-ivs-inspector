@@ -16,7 +16,7 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    logger.info(f"Received event: {json.dumps(event["queryStringParameters"], indent=2)}")        
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")        
     try:
         nextToken = event["queryStringParameters"].get("nextToken")
         ivsListStreamsResponse = ivsClient.list_streams(
@@ -26,4 +26,5 @@ def lambda_handler(event, context):
 
         return respond(None, json.dumps(ivsListStreamsResponse, default=str))
     except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
         return respond(e)

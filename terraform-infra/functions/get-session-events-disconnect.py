@@ -51,7 +51,7 @@ def lambda_handler(event, context):
 
             return respond(None, json.dumps("Connection ID deleted successfully", default=str))
         else:
-            return respond(None,  json.dumps("Connection ID not found in any stream", default=str))
+            return respond(None, json.dumps("Connection ID not found in any stream", default=str))
 
     except exceptions.ClientError as err:
         logger.error(
