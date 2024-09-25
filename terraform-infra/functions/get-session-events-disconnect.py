@@ -12,7 +12,7 @@ stream_state_events_table = dynamodb.Table(
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err if err else json.dumps(res, default=str),
+        "body": err if err else res,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -49,9 +49,9 @@ def lambda_handler(event, context):
                 ExpressionAttributeValues={":connectionIds": stream_details["connectionIds"]},
             )
 
-            return respond(None, "Connection ID deleted successfully")
+            return respond(None, json.dumps("Connection ID deleted successfully", default=str))
         else:
-            return respond(None, "Connection ID not found in any stream")
+            return respond(None,  json.dumps("Connection ID not found in any stream", default=str))
 
     except exceptions.ClientError as err:
         logger.error(

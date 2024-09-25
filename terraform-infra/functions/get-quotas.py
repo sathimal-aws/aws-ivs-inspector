@@ -8,7 +8,7 @@ serviceQuotasClient = boto3.client("service-quotas")
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err if err else json.dumps(res, default=str),
+        "body": err if err else res,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -26,6 +26,6 @@ def lambda_handler(event, context):
             MaxResults=100,
         )
 
-        return respond(None, listServiceQuotasResponse)
+        return respond(None, json.dumps(listServiceQuotasResponse, default=str))
     except Exception as e:
         return respond(e)

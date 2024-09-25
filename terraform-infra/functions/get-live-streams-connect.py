@@ -11,7 +11,7 @@ live_stream_session_connection_ids_table = dynamodb.Table(
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err if err else json.dumps(res, default=str),
+        "body": err if err else res,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -30,7 +30,7 @@ def lambda_handler(event, context):
         )
 
         logger.info(f"Connection ID {connection_id} added successfully.")
-        return respond(None, f"Connection ID {connection_id} added successfully.")
+        return respond(None, json.dumps(f"Connection ID {connection_id} added successfully.", default=str))
 
     except botocore.exceptions.ClientError as err:
         logger.error(

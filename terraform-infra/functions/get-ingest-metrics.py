@@ -9,7 +9,7 @@ ingest_metrics_table = dynamodb.Table(f"{os.environ['project_name']}-ingest-metr
 def respond(err, res=None):
     return {
         "statusCode": 400 if err else 200,
-        "body": err if err else json.dumps(res, default=str),
+        "body": err if err else res,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
@@ -30,7 +30,7 @@ def lambda_handler(event, context):
 
         if "Item" in data:
             logger.info(f"Retrieved ingest metrics: {json.dumps(data['Item'], indent=2, default=str)}")
-            return respond(None, data["Item"])
+            return respond(None, json.dumps(data, default=str))
         else:
             logger.info(f"No ingest metrics found for stream ID: {event['queryStringParameters']['stream_id']} and channel ID: {event['queryStringParameters']['channel_id']}")
             return respond(None, {})  # Return an empty dictionary if no item is found
