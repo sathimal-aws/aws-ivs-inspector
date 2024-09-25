@@ -21,7 +21,7 @@ def lambda_handler(event, context):
         nextToken = event["queryStringParameters"].get("nextToken")
         ivsListStreamSessionResponse = ivsClient.list_stream_sessions(
             channelArn=event["queryStringParameters"]["channelArn"],
-            nextToken=nextToken if nextToken else None,
+            nextToken=nextToken if nextToken else "",
             maxResults=100,
         )
 
