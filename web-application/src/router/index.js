@@ -38,7 +38,17 @@ export default route(async function ({ store }) {
           region: to.params.region,
         },
       });
-    else if (to.name == "Auth") {
+    else if (to.name === "MainLayout") {
+      console.log("to.params:", to.params);
+
+      next({
+        name: "Dashboard",
+        params: {
+          account_id: to.params.account_id,
+          region: to.params.region,
+        },
+      });
+    } else if (to.name == "Auth") {
       next();
     } else {
       authStore.isUserSignedIn().then((res) => {

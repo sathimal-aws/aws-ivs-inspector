@@ -1,7 +1,8 @@
 import ast
 import os
-import boto3  # type: ignore
-import botocore.exceptions as exceptions  # type: ignore
+import boto3
+import json
+import botocore.exceptions as exceptions 
 import logging
 from time import sleep
 from datetime import datetime, timedelta
@@ -14,7 +15,7 @@ dynamodb = boto3.resource("dynamodb")
 
 
 def lambda_handler(event):
-    print("Received event json: " + json.dumps(event, indent=2, default=str))  # type: ignore
+    print("Received event json: " + json.dumps(event, indent=2, default=str))
     ingestLogsTable = dynamodb.Table(event["DbTableName"])
     cloudWatchClient = boto3.client("cloudwatch", region_name=event["RegionName"])
 
