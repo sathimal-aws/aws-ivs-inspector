@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     try:
         nextToken = event["queryStringParameters"].get("nextToken")
         ivsGetChannelsResponse = ivsClient.list_channels(
-            nextToken=nextToken if nextToken else None,
+            nextToken=nextToken if nextToken else "",
             maxResults=100,
         )
 

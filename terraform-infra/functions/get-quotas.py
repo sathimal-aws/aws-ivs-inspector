@@ -22,7 +22,7 @@ def lambda_handler(event, context):
         nextToken = event["queryStringParameters"].get("nextToken")
         listServiceQuotasResponse = serviceQuotasClient.list_service_quotas(
             ServiceCode=event["queryStringParameters"]["serviceCode"],
-            nextToken=nextToken if nextToken else None,
+            NextToken=nextToken if nextToken else "",
             MaxResults=100,
         )
 
