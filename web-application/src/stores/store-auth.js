@@ -5,16 +5,17 @@ import {
   fetchAuthSession,
   signOut,
 } from "aws-amplify/auth";
-import { computed } from "vue";
+import { useRouter } from "vue-router";
 import { useCommonStore } from "./store-common";
+import { Notify } from "quasar";
 
+const logger = console; // Use console for logging for now
 const commonStore = useCommonStore();
-const ivsRegions = computed(() => commonStore.regions);
+const ivsRegions = commonStore.regions; // No need for computed here
 
 export const useAuthStore = defineStore("AuthStore", {
   state: () => ({
     userSignedIn: false,
-    userState: null,
     user: null,
     accessToken: null,
   }),
@@ -22,25 +23,19 @@ export const useAuthStore = defineStore("AuthStore", {
   actions: {
     async isUserSignedIn() {
       try {
-        return await getCurrentUser().then(async (userRes) => {
-          // console.log("user Response:", userRes);
-          if (userRes.userId) {
-            return await fetchAuthSession().then((fetchAuthSessionRes) => {
-              this.accessToken =
-                fetchAuthSessionRes.tokens?.idToken?.toString();
-              this.user = userRes;
-              this.userSignedIn = true;
-              return true;
-            });
-          }
-        });
+        const userRes = await getCurrentUser();
+        if (userRes?.userId) {
+          const fetchAuthSessionRes = await fetchAuthSession();
+          this.accessToken = fetchAuthSessionRes.tokens?.idToken?.toString();
+          this.user = userRes;
+          this.userSignedIn = true;
+          return true;
+        }
       } catch (err) {
-        console.log("err: ", err.message);
-        this.router.push({
-          name: "Auth",
-        });
-        return err;
+        logger.error("Error checking user sign-in status:", err.message);
+        useRouter().push({ name: "Auth" });
       }
+      return false;
     },
 
     async userSignIn(payload) {
@@ -50,43 +45,42 @@ export const useAuthStore = defineStore("AuthStore", {
           password: payload.password,
         });
 
-        console.log(signInResponse.isSignedIn);
         if (signInResponse.isSignedIn) {
-          getCurrentUser().then((res) => {
-            console.log(res);
-            this.user = res;
-            console.log("redirect:", this.route?.query?.redirect);
-            this.router.push(
-              this.route?.query?.redirect || {
-                name: "Dashboard",
-                params: {
-                  account_id: "740024244647",
-                  region: ivsRegions.value[0],
-                },
-              }
-            );
-          });
+          this.user = await getCurrentUser();
+          const router = useRouter();
+          router.push(
+            router.currentRoute.value.query?.redirect || {
+              name: "Dashboard",
+              params: {
+                account_id: "740024244647", // Consider making this dynamic
+                region: ivsRegions[0],
+              },
+            }
+          );
         }
-
         return true;
       } catch (error) {
-        console.log("error signing in", error);
+        logger.error("Error signing in:", error);
+        Notify.create({
+          color: "negative",
+          position: "top",
+          message: error.message || "Sign-in failed", // Show specific error if available
+          icon: "report_problem",
+        });
       }
-
-      return true;
+      return false;
     },
 
     async userSignOut() {
-      console.log("user sign out called");
       try {
-        return signOut().then(() => {
-          this.user = null;
-          return true;
-        });
+        await signOut();
+        this.user = null;
+        this.userSignedIn = false;
+        return true;
       } catch (error) {
-        console.log("error sign out", error);
-        return error;
+        logger.error("Error signing out:", error);
       }
+      return false;
     },
 
     setUser(user) {

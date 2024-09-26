@@ -5,6 +5,7 @@ import { useAuthStore } from "./store-auth";
 
 const authStore = useAuthStore();
 const envVars = import.meta.env;
+const logger = console; // Use console for logging for now
 
 export const useChannelStore = defineStore("ChannelStore", {
   state: () => ({
@@ -16,159 +17,93 @@ export const useChannelStore = defineStore("ChannelStore", {
     channelList: (state) => state.channels,
   },
   actions: {
-    async getChannels(ivsRegion) {
+    async fetchApiData(ivsRegion, endpoint, params = {}) {
       try {
-        console.log("getting channel list:", ivsRegion);
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
         );
         const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/list-channels`,
+          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/${endpoint}`,
           {
-            params: {
-              nextToken: this.channelsNextToken[ivsRegion] || "",
-            },
-            headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-            },
+            params,
+            headers: { Authorization: `Bearer ${authStore.accessToken}` },
           }
         );
-        console.log("response:", response.data);
 
-        if (response.status == 200) {
-          console.log(this.channels);
-          response.data?.channels.map((channel) => {
-            const channelId = channel.arn.split("/")[1];
-            channel["channelId"] = channelId;
-            if (!this.channels[ivsRegion]) {
-              this.channels[ivsRegion] = {};
-            }
-            this.channels[ivsRegion][channelId] = { channelConfig: channel };
-          });
-          this.channelsNextToken[ivsRegion] = response.data?.nextToken;
+        if (response.status === 200) {
+          return response.data;
         }
-        return true;
-      } catch {
+      } catch (error) {
+        logger.error(`Error fetching ${endpoint}: ${error.message}`);
         Notify.create({
           color: "negative",
           position: "top",
-          message: "Loading failed",
+          message: `Getting ${endpoint} failed`,
           icon: "report_problem",
         });
       }
+      return null;
+    },
+
+    async getChannels(ivsRegion) {
+      const data = await this.fetchApiData(ivsRegion, "list-channels", {
+        nextToken: this.channelsNextToken[ivsRegion] || "",
+      });
+      if (data) {
+        data?.channels.forEach((channel) => {
+          const channelId = channel.arn.split("/")[1];
+          channel.channelId = channelId;
+
+          this.channels[ivsRegion] = this.channels[ivsRegion] || {};
+          this.channels[ivsRegion][channelId] = { channelConfig: channel };
+        });
+        this.channelsNextToken[ivsRegion] = data?.nextToken;
+        return true;
+      }
+      return false;
     },
 
     async getChannel(channelArn, channelId, ivsRegion) {
-      console.log(channelArn);
+      const data = await this.fetchApiData(ivsRegion, "get-channel", {
+        channelArn,
+      });
+      if (data) {
+        this.channels[ivsRegion] = this.channels[ivsRegion] || {};
+        this.channels[ivsRegion][channelId] =
+          this.channels[ivsRegion][channelId] || {};
 
-      try {
-        const apis = JSON.parse(
-          envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
+        this.channels[ivsRegion][channelId].channelConfig = Object.assign(
+          this.channels[ivsRegion][channelId]?.channelConfig || {},
+          data?.channel
         );
 
-        const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-channel`,
-          {
-            params: {
-              channelArn: channelArn,
-            },
-            headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-            },
-          }
-        );
-        console.log("channelDetails", response.data);
-
-        if (response.status == 200) {
-          console.log(
-            "channelDetails Exists:",
-            this.channels[ivsRegion][channelId]
-          );
-          if (!this.channels[ivsRegion]) {
-            this.channels[ivsRegion] = {};
-          }
-          if (!this.channels[ivsRegion][channelId]) {
-            this.channels[ivsRegion][channelId] = {};
-          }
-
-          console.log(
-            "this.channels[channelId]",
-            this.channels[ivsRegion][channelId]
-          );
-          this.channels[ivsRegion][channelId].channelConfig = Object.assign(
-            this.channels[ivsRegion][channelId]?.channelConfig || {},
-            response.data?.channel
-          );
-        }
         return true;
-      } catch (error) {
-        console.log(error.message);
-        Notify.create({
-          color: "negative",
-          position: "top",
-          message: error.message,
-          icon: "report_problem",
-        });
-        return error;
       }
+      return false;
     },
 
     async listStreamSessions(channelArn, channelId, ivsRegion) {
-      console.log("getting stream sessions:", channelArn, channelId, ivsRegion);
-      try {
-        const apis = JSON.parse(
-          envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
-        );
-
-        const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/list-stream-sessions`,
-          {
-            params: {
-              channelArn: channelArn,
-              nextToken: this.sessionsNextToken[ivsRegion]?.[channelId] || "",
-            },
-            headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-            },
-          }
-        );
-        // console.log("sessions response:", response.data);
-        if (response.status == 200) {
-          if (!this.channels[ivsRegion]) {
-            this.channels[ivsRegion] = {};
-          }
-          if (!this.channels[ivsRegion][channelId]) {
-            this.channels[ivsRegion][channelId] = {};
-          }
-
-          this.channels[ivsRegion][channelId].streamSessions = this.channels[
-            ivsRegion
-          ][channelId]?.streamSessions
+      const data = await this.fetchApiData(ivsRegion, "list-stream-sessions", {
+        channelArn: channelArn,
+        nextToken: this.sessionsNextToken[ivsRegion]?.[channelId] || "",
+      });
+      if (data) {
+        this.channels[ivsRegion] = this.channels[ivsRegion] || {};
+        this.channels[ivsRegion][channelId] = {
+          ...this.channels[ivsRegion][channelId],
+          streamSessions: this.channels[ivsRegion][channelId]?.streamSessions
             ? this.channels[ivsRegion][channelId]?.streamSessions.concat(
-                response.data?.streamSessions
+                data?.streamSessions
               )
-            : response.data?.streamSessions;
+            : data?.streamSessions,
+        };
 
-          console.log(
-            "region specific channel:",
-            this.channels[ivsRegion][channelId]
-          );
-
-          if (!this.sessionsNextToken[ivsRegion]) {
-            this.sessionsNextToken[ivsRegion] = {};
-          }
-          this.sessionsNextToken[ivsRegion][channelId] =
-            response.data?.nextToken;
-        }
+        this.sessionsNextToken[ivsRegion] =
+          this.sessionsNextToken[ivsRegion] || {};
+        this.sessionsNextToken[ivsRegion][channelId] = data?.nextToken;
         return true;
-      } catch (error) {
-        Notify.create({
-          color: "negative",
-          position: "top",
-          message: error.message,
-          icon: "report_problem",
-        });
       }
+      return false;
     },
   },
 });

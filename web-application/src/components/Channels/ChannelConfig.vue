@@ -7,14 +7,6 @@
             <q-item-label class="text-h6"> Channel Configuration </q-item-label>
           </q-item-section>
 
-          <!-- :label="
-                capitalize(
-                  ` ${channelDetails?.channelConfig?.health.toLowerCase()}
-                  ${channelDetails?.channelConfig?.state.toLowerCase()}
-                    session`
-                )
-              " -->
-
           <q-item-section avatar>
             <q-btn
               label="Session Details"
@@ -30,7 +22,8 @@
         </q-item>
       </div>
       <q-separator spaced />
-      <div class="flex q-gutter-sm" v-if="true">
+
+      <div class="flex q-gutter-sm">
         <q-item
           v-for="(item, key) in channelDetails?.channelConfig"
           :key="key"
@@ -44,16 +37,6 @@
               {{ item }}
             </q-item-label>
           </q-item-section>
-
-          <!-- <q-item-section side>
-            <q-btn
-              icon="content_copy"
-              dense
-              padding="none"
-              unelevated
-              @click="copyItem(item)"
-            />
-          </q-item-section> -->
         </q-item>
       </div>
     </div>
@@ -63,8 +46,8 @@
 <script>
 import { defineComponent, computed, onMounted, ref, capitalize } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { date } from "quasar";
 import { useChannelStore } from "src/stores/store-channel";
-import { copyToClipboard, date } from "quasar";
 import { useCommonStore } from "src/stores/store-common";
 
 export default defineComponent({
@@ -143,16 +126,6 @@ export default defineComponent({
       });
     };
 
-    const copyItem = (item) => {
-      copyToClipboard(item)
-        .then(() => {
-          console.log("copied");
-        })
-        .catch(() => {
-          console.log("copy failed");
-        });
-    };
-
     onMounted(() => {
       console.log("channelDetails in store", channelStore.channels);
       console.log(channelId, channelDetails.value);
@@ -173,12 +146,11 @@ export default defineComponent({
       columns,
       loading,
       initialPagination: commonStore.initialPagination,
+      searchSession: ref(""),
 
       dateManipulate,
       goToSessionDetails,
-      copyItem,
       capitalize,
-      searchSession: ref(""),
     };
   },
 });

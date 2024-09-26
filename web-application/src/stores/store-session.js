@@ -7,6 +7,7 @@ import { useAuthStore } from "./store-auth";
 const authStore = useAuthStore();
 const channelStore = useChannelStore();
 const envVars = import.meta.env;
+const logger = console; // Use console for logging for now
 
 export const useSessionStore = defineStore("SessionStore", {
   state: () => ({
@@ -18,184 +19,121 @@ export const useSessionStore = defineStore("SessionStore", {
   }),
 
   actions: {
-    async listStreams(ivsRegion) {
-      // console.log("getting live streams", ivsRegion);
+    async fetchApiData(ivsRegion, endpoint, params = {}) {
       try {
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
         );
-
         const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/list-streams`,
+          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/${endpoint}`,
           {
-            params: {
-              nextToken: this.streamsNextToken[ivsRegion] || "",
-            },
-            headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-            },
+            params,
+            headers: { Authorization: `Bearer ${authStore.accessToken}` },
           }
         );
-        // console.log("getSessions response:", response);
-        if (response.status == 200) {
-          response.data?.streams.map((stream) => {
-            // console.log(stream);
-            const channelId = stream.channelArn.split("/")[1];
-            stream["channelId"] = channelId;
 
-            if (!this.liveSessions[ivsRegion]) {
-              this.liveSessions[ivsRegion] = {};
-            }
-            if (!channelStore.channels[ivsRegion]) {
-              channelStore.channels[ivsRegion] = {};
-            }
-            if (!channelStore.channels[ivsRegion][channelId]) {
-              channelStore.channels[ivsRegion][channelId] = {};
-            }
-
-            console.log("stream: ", stream);
-
-            this.liveSessions[ivsRegion][channelId] = stream;
-            channelStore.channels[ivsRegion][channelId].channelConfig = stream;
-          });
-          this.streamsNextToken[ivsRegion] = response.data?.nextToken;
-          return true;
+        if (response.status === 200) {
+          return response.data;
         }
       } catch (error) {
-        console.log(error.message);
+        logger.error(`Error fetching ${endpoint}: ${error.message}`);
         Notify.create({
           color: "negative",
           position: "top",
-          message: "Getting live streams failed",
+          message: `Getting ${endpoint} failed`,
           icon: "report_problem",
         });
-        return error;
       }
+      return null;
+    },
+
+    async listStreams(ivsRegion) {
+      const data = await this.fetchApiData(ivsRegion, "list-streams", {
+        nextToken: this.streamsNextToken[ivsRegion] || "",
+      });
+      if (data) {
+        data?.streams.forEach((stream) => {
+          const channelId = stream.channelArn.split("/")[1];
+          stream.channelId = channelId;
+
+          this.liveSessions[ivsRegion] = this.liveSessions[ivsRegion] || {};
+          channelStore.channels[ivsRegion] =
+            channelStore.channels[ivsRegion] || {};
+          channelStore.channels[ivsRegion][channelId] =
+            channelStore.channels[ivsRegion][channelId] || {};
+
+          this.liveSessions[ivsRegion][channelId] = stream;
+          channelStore.channels[ivsRegion][channelId].channelConfig = stream;
+        });
+
+        this.streamsNextToken[ivsRegion] = data?.nextToken;
+        return true;
+      }
+      return false;
     },
 
     async getSession(streamId, channelArn, ivsRegion) {
-      try {
-        // console.log(streamId, channelArn);
-        const apis = JSON.parse(
-          envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
-        );
-
-        const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-session`,
-          {
-            params: {
-              stream_id: streamId,
-              channel_arn: channelArn,
-            },
-            headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-            },
-          }
-        );
-
-        console.log("getSession response:", response);
-        if (response.status == 200) {
-          if (!this.sessions[ivsRegion]) this.sessions[ivsRegion] = {};
-          this.sessions[ivsRegion][streamId] = Object.assign(
-            {},
-            this.sessions[ivsRegion]?.[streamId],
-            response.data?.Item
-          );
-          return true;
-        }
-      } catch (error) {
-        console.log(error.message);
-        Notify.create({
-          color: "negative",
-          position: "top",
-          message: "Getting session details failed",
-          icon: "report_problem",
-        });
-        return error;
+      const data = await this.fetchApiData(ivsRegion, "get-session", {
+        stream_id: streamId,
+        channel_arn: channelArn,
+      });
+      if (data) {
+        this.sessions[ivsRegion] = this.sessions[ivsRegion] || {};
+        this.sessions[ivsRegion][streamId] = {
+          ...this.sessions[ivsRegion][streamId],
+          ...data,
+        };
+        return true;
       }
+      return false;
     },
 
     async getStream(streamId, channelArn, ivsRegion) {
-      try {
-        // console.log(channelArn, streamId, ivsRegion);
-        const apis = JSON.parse(
-          envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
-        );
-
-        const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-stream`,
-          {
-            params: {
-              channelArn: channelArn,
-            },
-            headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-            },
-          }
-        );
-        console.log("getStream response:", response);
-        if (response.status == 200) {
-          if (!this.sessions[ivsRegion]) this.sessions[ivsRegion] = {};
-          if (!this.sessions[ivsRegion][streamId]) {
-            this.sessions[ivsRegion][streamId] = { stream: {} };
-          }
-
-          this.sessions[ivsRegion][streamId].stream = Object.assign(
-            {},
-            this.sessions[ivsRegion][streamId].stream,
-            response.data?.stream
-          );
-        }
-      } catch (error) {
-        console.log(error.message);
-        Notify.create({
-          color: "negative",
-          position: "top",
-          message: "Getting stream details failed",
-          icon: "report_problem",
-        });
-        return error;
+      const data = await this.fetchApiData(ivsRegion, "get-stream", {
+        channelArn,
+      });
+      if (data) {
+        this.sessions[ivsRegion] = this.sessions[ivsRegion] || {};
+        this.sessions[ivsRegion][streamId] = {
+          ...this.sessions[ivsRegion][streamId],
+          stream: { ...data?.stream },
+        };
+        return true;
       }
+      return false;
     },
 
     async getIngestMetrics(streamId, channelId, ivsRegion) {
-      try {
-        // console.log(streamId, channelId);
-        const apis = JSON.parse(
-          envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
-        );
-
-        const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-ingest-metrics`,
-          {
-            params: {
-              stream_id: streamId,
-              channel_id: channelId,
-            },
-            headers: {
-              Authorization: `Bearer ${authStore.accessToken}`,
-            },
-          }
-        );
-
-        console.log("ingest metrics response: ", response);
-
-        if (response.status == 200) {
-          if (!this.sessionMetrics[ivsRegion])
-            this.sessionMetrics[ivsRegion] = {};
-          this.sessionMetrics[ivsRegion][streamId] = response?.data;
-        }
+      const data = await this.fetchApiData(ivsRegion, "get-ingest-metrics", {
+        stream_id: streamId,
+        channel_id: channelId,
+      });
+      if (data && Object.keys(data).length > 0) {
+        this.sessionMetrics[ivsRegion] = this.sessionMetrics[ivsRegion] || {};
+        this.sessionMetrics[ivsRegion][streamId] = data;
         return true;
-      } catch (error) {
-        console.log(error.message);
-        Notify.create({
-          color: "negative",
-          position: "top",
-          message: "Getting ingest metrics failed",
-          icon: "report_problem",
-        });
-        return error;
       }
+      return false;
+    },
+
+    async getLiveStreams(ivsRegion) {
+      return this.connectToWebsocket(
+        ivsRegion,
+        "get_live_streams",
+        "get-live-streams",
+        "liveStreams"
+      );
+    },
+
+    async getQuotaProvisioned(serviceCode, ivsRegion) {
+      const data = await this.fetchApiData(ivsRegion, "get-quotas", {
+        serviceCode,
+      });
+      if (data) {
+        this.quotas = data;
+        return true;
+      }
+      return false;
     },
 
     // websocket API
@@ -208,50 +146,44 @@ export const useSessionStore = defineStore("SessionStore", {
         const ws = new WebSocket(
           `wss://${apis.get_session_events}.execute-api.${ivsRegion}.amazonaws.com/ivs`
         );
-        ws.onopen = () => {
-          const data = {
-            action: "get-session-events",
-            message: {
-              streamId: streamId,
-              channelArn: channelArn,
-            },
-          };
-          const payload = JSON.stringify(data);
 
-          ws.send(payload);
+        ws.onopen = () => {
+          ws.send(
+            JSON.stringify({
+              action: "get-session-events",
+              message: { streamId, channelArn },
+            })
+          );
 
           ws.onmessage = (event) => {
             const events = JSON.parse(event.data);
-            // console.log("events:", events);
-            if (!events.ResponseMetadata && Object.keys(events)) {
-              if (!this.sessions[ivsRegion]) {
-                this.sessions[ivsRegion] = {};
-              }
-              if (!this.sessions[ivsRegion][streamId]) {
-                this.sessions[ivsRegion][streamId] = {};
-              }
-              this.sessions[ivsRegion][streamId].events = events;
 
-              if (
-                !Object.values(events).filter(
-                  (event) => event.name == "Stream End"
-                ).length
-              ) {
-                // console.log("isLive");
-                this.sessions[ivsRegion][streamId].isLive = true;
-              }
+            console.log(events);
+
+            if (!events.ResponseMetadata && Object.keys(events).length > 0) {
+              this.sessions[ivsRegion] = this.sessions[ivsRegion] || {};
+              this.sessions[ivsRegion][streamId] = {
+                ...this.sessions[ivsRegion][streamId],
+                events,
+                isLive: !Object.values(events).some(
+                  (event) => event.name === "Stream End"
+                ),
+              };
             }
           };
         };
-        ws.close = () => {
-          console.log("get events connection closed");
+
+        ws.onclose = () => {
+          logger.info(
+            `WebSocket connection for session events closed (streamId: ${streamId}, region: ${ivsRegion})`
+          );
         };
+
         return true;
       } catch (error) {
-        console.log(error);
+        logger.error(`Error getting session events: ${error.message}`);
       }
-
-      ws.onclose = () => console.log("closed");
+      return false;
     },
 
     // websocket API
@@ -285,6 +217,9 @@ export const useSessionStore = defineStore("SessionStore", {
                   channelId: channelId,
                   state: "LIVE",
                 };
+
+                console.log(sessionState);
+
                 if (!this.liveSessions[ivsRegion]) {
                   this.liveSessions[ivsRegion] = {};
                 }
@@ -323,41 +258,6 @@ export const useSessionStore = defineStore("SessionStore", {
       } catch (error) {
         console.log(error);
         console.log("message:", error.Message);
-      }
-    },
-
-    getQuotaProvisioned(serviceCode, ivsRegion) {
-      try {
-        console.log(serviceCode);
-        const apis = JSON.parse(
-          envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
-        );
-
-        api
-          .get(
-            `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivsQuotaProvisioned`,
-            {
-              params: {
-                serviceCode: serviceCode,
-              },
-            }
-          )
-          .then((response) => {
-            if (response.data.statusCode == 200) {
-              this.quotas = response.data?.body;
-            }
-          })
-          .catch(() => {
-            Notify.create({
-              color: "negative",
-              position: "top",
-              message: "Getting quota provisioned failed",
-              icon: "report_problem",
-            });
-          });
-      } catch (error) {
-        console.log(error.message);
-        return error;
       }
     },
   },

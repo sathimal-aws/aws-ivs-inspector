@@ -3,6 +3,7 @@ import { api } from "boot/axios";
 import { Notify } from "quasar";
 import { useAuthStore } from "./store-auth";
 
+const logger = console; // Use console for logging for now
 const authStore = useAuthStore();
 const envVars = import.meta.env;
 
@@ -14,75 +15,56 @@ export const useAccountStore = defineStore("AccountStore", {
   }),
 
   actions: {
-    async getMetrics(ivsRegion) {
-      const apis = JSON.parse(
-        envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
-      );
-
+    async fetchApiData(ivsRegion, endpoint, params = {}) {
       try {
+        const apis = JSON.parse(
+          envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
+        );
         const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-metrics`,
+          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/${endpoint}`,
           {
-            params: {
-              regionName: ivsRegion,
-            },
-            headers: {
-              Authorization: `${authStore.accessToken}`,
-            },
+            params,
+            headers: { Authorization: `Bearer ${authStore.accessToken}` },
           }
         );
 
-        if (response.status == 200) {
-          this.metrics[ivsRegion] = response.data;
+        if (response.status === 200) {
+          return response.data;
         }
-        return true;
       } catch (error) {
-        console.log("getMetrics err:", error);
+        logger.error(`Error fetching ${endpoint}: ${error.message}`);
         Notify.create({
           color: "negative",
           position: "top",
-          message: "Getting metrics failed",
+          message: `Getting ${endpoint} failed`,
           icon: "report_problem",
         });
-
-        return error;
       }
+      return null;
+    },
+
+    async getMetrics(ivsRegion) {
+      const data = await this.fetchApiData(ivsRegion, "get-metrics", {
+        regionName: ivsRegion,
+      });
+      if (data) {
+        this.metrics[ivsRegion] = data;
+        return true;
+      }
+      return false;
     },
 
     async getQuotaProvisioned(serviceCode, ivsRegion) {
-      const apis = JSON.parse(
-        envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
-      );
-
-      try {
-        const response = await api.get(
-          `https://${apis.rest}.execute-api.${ivsRegion}.amazonaws.com/ivs/get-quotas`,
-          {
-            params: {
-              serviceCode: serviceCode,
-              nextToken: this.quotasNextToken[ivsRegion] || "",
-            },
-            headers: {
-              Authorization: `${authStore.accessToken}`,
-            },
-          }
-        );
-
-        if (response.status == 200) {
-          this.accountQuotas[ivsRegion] = response.data?.Quotas;
-        }
+      const data = await this.fetchApiData(ivsRegion, "get-quotas", {
+        serviceCode,
+        nextToken: this.quotasNextToken[ivsRegion] || "",
+      });
+      if (data) {
+        this.accountQuotas[ivsRegion] = data?.Quotas;
+        this.quotasNextToken[ivsRegion] = data?.nextToken;
         return true;
-      } catch (error) {
-        console.log("getQuotaProvisioned err:", error);
-        Notify.create({
-          color: "negative",
-          position: "top",
-          message: "Getting quotas failed",
-          icon: "report_problem",
-        });
-
-        return error;
       }
+      return false;
     },
   },
 });
