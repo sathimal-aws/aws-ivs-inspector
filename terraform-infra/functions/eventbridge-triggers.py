@@ -217,6 +217,28 @@ def start_ingest_metrics_collection(event):
     except (botocore.exceptions.ClientError, KeyError) as err:
         logger.error(f"Error starting ingest metrics collection: {err}")
 
+def add_stream_end_time(event):
+    """Adds the stream end time to the stream sessions table."""
+    stream_id = event["detail"]["stream_id"]
+    channel_arn = event["resources"][0]
+
+    try:
+        ivs_get_stream_session_response = ivs_client.get_stream_session(
+            channelArn=channel_arn, streamId=stream_id
+        )
+        stream_session_end_time = ivs_get_stream_session_response["streamSession"]["endTime"].timetuple()
+
+        if "Item" in ivs_get_stream_session_response:
+            stream_sessions_table.update_item(
+                Key={"streamId": stream_id, "channelArn": channel_arn},
+                UpdateExpression="set endTime = :endTime",
+                ExpressionAttributeValues={
+                    ":endTime": calendar.timegm(stream_session_end_time)
+                },
+            )
+    except (botocore.exceptions.ClientError, KeyError) as err:
+        logger.error(f"Error adding stream end time: {err}")
+
 def stop_ingest_metrics_collection(event):
     """Stops ECS tasks that are collecting ingest metrics."""
     stream_id = event["detail"]["stream_id"]
@@ -267,6 +289,7 @@ def lambda_handler(event, context):
         if is_stream_state_change and event_name == "Stream Start":
             start_ingest_metrics_collection(event)
         elif is_stream_state_change and event_name == "Stream End":
+            add_stream_end_time(event)
             stop_ingest_metrics_collection(event)
 
         return {"statusCode": 200, "body": json.dumps("Event processed successfully")}
