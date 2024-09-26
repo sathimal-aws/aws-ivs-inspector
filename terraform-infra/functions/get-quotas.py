@@ -17,7 +17,7 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    logger.info(f"Received event: {json.dumps(event['queryStringParameters'], indent=2)}")
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")
     try:
         nextToken = event["queryStringParameters"].get("nextToken")
         listServiceQuotasResponse = serviceQuotasClient.list_service_quotas(
@@ -26,7 +26,20 @@ def lambda_handler(event, context):
             MaxResults=100,
         )
 
+        print("listServiceQuotasResponse:", listServiceQuotasResponse)
+
         return respond(None, json.dumps(listServiceQuotasResponse, default=str))
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         return respond(e)
+    
+def lambda_handler(event, context):
+    print("Received event: " + json.dumps(event["queryStringParameters"], indent=2))
+
+    listServiceQuotasResponse = serviceQuotasClient.list_service_quotas(
+        ServiceCode=event["queryStringParameters"]["serviceCode"],
+        # NextToken=event["queryStringParameters"]["nextToken"],
+        MaxResults=100,
+    )
+
+    return respond(None, json.dumps(listServiceQuotasResponse, indent=2, default=str))

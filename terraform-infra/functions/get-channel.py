@@ -16,7 +16,7 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    logger.info(f"Received event: {json.dumps(event['queryStringParameters'], indent=2)}")        
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")        
     try:
         ivsGetChannelResponse = ivsClient.get_channel(
             arn=event["queryStringParameters"]["channelArn"],

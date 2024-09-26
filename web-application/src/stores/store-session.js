@@ -222,6 +222,7 @@ export const useSessionStore = defineStore("SessionStore", {
 
           ws.onmessage = (event) => {
             const events = JSON.parse(event.data);
+            console.log("events:", events);
             if (!events.ResponseMetadata && Object.keys(events)) {
               if (!this.sessions[ivsRegion]) {
                 this.sessions[ivsRegion] = {};
