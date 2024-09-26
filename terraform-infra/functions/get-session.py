@@ -19,7 +19,7 @@ def respond(err, res=None):
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event, indent=2)}")        
     try:
-        for i in range(3):
+        for i in range(5):
             data = stream_sessions_table.get_item(
                 Key={
                     "streamId": event["queryStringParameters"]["stream_id"],

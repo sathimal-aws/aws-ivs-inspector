@@ -9,53 +9,78 @@
           <q-item-section side>
             <q-item-label> Session CCV: {{ sessionCcv }} </q-item-label>
           </q-item-section>
+
+          <q-item-section side>
+            <q-btn
+              color="primary"
+              round
+              dense
+              unelevated
+              icon="refresh"
+              @click="handleMetricLoad"
+            />
+          </q-item-section>
         </q-item>
+
         <q-separator />
       </div>
 
       <div class="col">
-        <q-card class="full-width" style="height: 420px" flat>
-          <q-card-section class="q-pa-none">
-            <q-inner-loading
-              v-if="!metricsLoaded"
-              label="Loading Metrics..."
-              label-class="text-teal"
-              label-style="font-size: 1.1em"
-            />
-            <div v-else-if="sessionMetrics">
-              <q-tabs
-                v-model="metricTab"
-                no-caps
-                class="text-grey"
-                active-color="primary"
-                indicator-color="primary"
-                align="justify"
+        <q-card class="full-width" style="height: 420px" square flat>
+          <div v-if="sessionMetrics">
+            <q-tabs
+              v-model="metricTab"
+              no-caps
+              class="text-grey"
+              active-color="primary"
+              indicator-color="primary"
+              align="justify"
+            >
+              <q-tab
+                v-for="(metric, index) in metricTypes"
+                :key="index"
+                :name="metric.type"
+                :label="metric.label"
+              />
+            </q-tabs>
+
+            <q-separator />
+
+            <q-tab-panels v-model="metricTab" animated>
+              <q-tab-panel
+                class="q-pa-none"
+                :name="metric.type"
+                v-for="(metric, index) in metricTypes"
+                :key="index"
               >
-                <q-tab
-                  v-for="(metric, index) in metricTypes"
-                  :key="index"
-                  :name="metric.type"
+                <chart-ingest-metrics
+                  :metrics="sessionMetrics[metric.type]"
                   :label="metric.label"
                 />
-              </q-tabs>
-
-              <q-separator />
-
-              <q-tab-panels v-model="metricTab" animated>
-                <q-tab-panel
-                  class="q-pa-none"
-                  :name="metric.type"
-                  v-for="(metric, index) in metricTypes"
-                  :key="index"
-                >
-                  <chart-ingest-metrics
-                    :metrics="sessionMetrics[metric.type]"
-                    :label="metric.label"
-                  />
-                </q-tab-panel>
-              </q-tab-panels>
+              </q-tab-panel>
+            </q-tab-panels>
+          </div>
+          <div
+            v-else
+            class="column col items-center justify-center full-height"
+          >
+            <div class="col-auto">
+              <q-spinner color="primary" size="3em" />
             </div>
-          </q-card-section>
+
+            <q-item-label header> Loading metrics... </q-item-label>
+
+            <div class="col-auto">
+              <q-btn
+                color="primary"
+                round
+                dense
+                unelevated
+                icon="refresh"
+                @click="handleMetricLoad"
+              />
+            </div>
+          </div>
         </q-card>
       </div>
 
@@ -160,6 +185,7 @@ import { useCommonStore } from "src/stores/store-common";
 import ChartIngestMetrics from "src/components/Charts/ChartIngestMetrics.vue";
 import ListItems from "src/components/Common/ListItems.vue";
 import ListItemsEvent from "src/components/Common/ListItemsEvent.vue";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "SessionDetails",
@@ -168,6 +194,7 @@ export default defineComponent({
     const sessionStore = useSessionStore();
     const commonStore = useCommonStore();
     const $route = useRoute();
+    const $q = useQuasar();
 
     // Extract route parameters
     const awsRegion = $route.params.region;
@@ -213,13 +240,22 @@ export default defineComponent({
     // Refs for dialog and loading state
     const showInformation = ref(false);
     const infoType = ref(null);
-    const metricsLoaded = ref(false);
+    const metricsLoaded = ref(sessionMetrics.value ? true : false);
+    const eventNames = computed(() =>
+      Object.values(sessionDetails.value.events).map((event) => event.name)
+    );
 
-    // Watch for changes in sessionDetails
+    // Watch for changes in sessionDetails events
     watch(sessionDetails, (current) => {
-      if (current?.startTime && !current?.endTime) {
-        console.log("current", current);
-        //   sessionStore.getStream(sessionId, channelArn.value, awsRegion);
+      if (current?.events && eventNames.value.includes("Stream End")) {
+        $q.notify({
+          position: "top",
+          type: "negative",
+          message: "Live stream ended",
+          icon: "warning",
+          timeout: 0,
+          actions: [{ icon: "close", color: "white" }],
+        });
       }
     });
 
@@ -229,19 +265,26 @@ export default defineComponent({
         await Promise.all([
           sessionStore.getSessionEvents(sessionId, channelArn.value, awsRegion),
           sessionStore.getSession(sessionId, channelArn.value, awsRegion),
+          sessionStore.getStream(sessionId, channelArn.value, awsRegion),
         ]);
         if (!sessionMetrics.value) {
-          const res = await sessionStore.getIngestMetrics(
-            sessionId,
-            channelId,
-            awsRegion
-          );
-          if (res) metricsLoaded.value = true;
+          handleMetricLoad();
         }
       } else {
         metricsLoaded.value = true;
       }
     });
+
+    const handleMetricLoad = () => {
+      sessionStore
+        .getIngestMetrics(sessionId, channelId, awsRegion)
+        .then((res) => {
+          if (res) metricsLoaded.value = true;
+        });
+      if (!eventNames.value.includes("Stream End")) {
+        sessionStore.getStream(sessionId, channelArn.value, awsRegion);
+      }
+    };
 
     // Function to show event reason dialog
     const showEventReason = (reason) => {
@@ -262,6 +305,7 @@ export default defineComponent({
       showInformation,
       infoType,
       metricsLoaded,
+      handleMetricLoad,
       showEventReason,
     };
   },

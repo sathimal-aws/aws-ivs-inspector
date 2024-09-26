@@ -1,4 +1,5 @@
 import json, logging
+from time import sleep
 import boto3
 
 logger = logging.getLogger()
@@ -18,6 +19,7 @@ def respond(err, res=None):
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event, indent=2)}")        
     try:
+        sleep(3) # adding delay to the call
         ivsGetStreamResponse = ivsClient.get_stream(
             channelArn=event["queryStringParameters"]["channelArn"],
         )

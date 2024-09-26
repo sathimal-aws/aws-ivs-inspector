@@ -36,11 +36,14 @@ export const useSessionStore = defineStore("SessionStore", {
           return response.data;
         }
       } catch (error) {
+        console.log(error.response.data);
         logger.error(`Error fetching ${endpoint}: ${error.message}`);
         Notify.create({
           color: "negative",
           position: "top",
-          message: `Getting ${endpoint} failed`,
+          message: error.response.data.includes("ChannelNotBroadcasting")
+            ? "Channel is not live"
+            : error.response.data,
           icon: "report_problem",
         });
       }
@@ -108,6 +111,7 @@ export const useSessionStore = defineStore("SessionStore", {
         stream_id: streamId,
         channel_id: channelId,
       });
+
       if (data && Object.keys(data).length > 0) {
         this.sessionMetrics[ivsRegion] = this.sessionMetrics[ivsRegion] || {};
         this.sessionMetrics[ivsRegion][streamId] = data;
@@ -157,8 +161,6 @@ export const useSessionStore = defineStore("SessionStore", {
 
           ws.onmessage = (event) => {
             const events = JSON.parse(event.data);
-
-            console.log(events);
 
             if (!events.ResponseMetadata && Object.keys(events).length > 0) {
               this.sessions[ivsRegion] = this.sessions[ivsRegion] || {};

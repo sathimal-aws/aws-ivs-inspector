@@ -38,13 +38,6 @@ const routes = [
         meta: { requiresAuth: true },
       },
 
-      // {
-      //   name: "Sessions",
-      //   path: "/account/:account_id/region/:region/channel/:channel_id/sessions",
-      //   component: () => import("src/pages/Sessions.vue"),
-      //   meta: { requiresAuth: true },
-      // },
-
       {
         name: "Session Details",
         path: "/account/:account_id/region/:region/channel/:channel_id/session/:session_id",

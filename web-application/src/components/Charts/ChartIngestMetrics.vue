@@ -1,21 +1,19 @@
 <template>
-  <!-- {{ option?.series[1]?.data }} -->
-  <!-- {{ Object.values(metrics).map((value) => Math.trunc(value / 1024)) }} -->
   <v-chart
-    v-if="option?.series?.data.length"
+    v-if="chartOptions.series.data.length"
     class="ivs-bg-grey q-pa-md"
-    :option="option"
+    :option="chartOptions"
     autoresize
   />
 </template>
 
 <script>
-import { defineComponent, onMounted, ref, provide } from "vue";
-
+import { defineComponent, onMounted, ref, provide, watch, toRefs } from "vue";
 import { date } from "quasar";
 import { use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
-import { PieChart, LineChart } from "echarts/charts";
+import { LineChart } from "echarts/charts";
+
 import {
   TitleComponent,
   TooltipComponent,
@@ -29,7 +27,6 @@ import VChart, { THEME_KEY } from "vue-echarts";
 
 use([
   CanvasRenderer,
-  PieChart,
   LineChart,
   GridComponent,
   TitleComponent,
@@ -38,6 +35,29 @@ use([
   ToolboxComponent,
   DataZoomComponent,
 ]);
+
+const metricConfigs = {
+  "Ingest Video Bitrate (kbps)": {
+    unit: "kbps",
+    calculate: (value) => Math.trunc(value / 1024),
+  },
+  "Ingest Audio Bitrate (kbps)": {
+    unit: "kbps",
+    calculate: (value) => Math.trunc(value / 1024),
+  },
+  "Ingest Framerate (fps)": {
+    unit: "fps",
+    calculate: (value) => Math.trunc(value),
+  },
+  "Keyframe Interval (idr)": {
+    unit: "seconds",
+    calculate: (value) => Math.trunc(value),
+  },
+  "Concurrent Views (count)": {
+    unit: "count",
+    calculate: (value) => Math.trunc(value),
+  },
+};
 
 export default defineComponent({
   name: "IngestMetricsChart",
@@ -52,11 +72,12 @@ export default defineComponent({
   setup(props) {
     provide(THEME_KEY);
 
-    const option = ref({
+    const { metrics } = toRefs(props);
+
+    const chartOptions = ref({
       tooltip: {
         trigger: "axis",
       },
-
       grid: {
         left: "2%",
         right: "2%",
@@ -64,113 +85,62 @@ export default defineComponent({
         bottom: "15%",
         containLabel: true,
       },
-
       dataZoom: [
         {
           show: true,
           realtime: true,
           start: 0,
           end: 100,
-          xAxisIndex: [0, 1],
+          xAxisIndex: [0],
         },
         {
           type: "inside",
           realtime: true,
           start: 30,
           end: 70,
-          xAxisIndex: [0, 1],
+          xAxisIndex: [0],
         },
       ],
-
-      toolbox: {
-        // feature: {
-        //   saveAsImage: {},
-        // },
-      },
-
       xAxis: {
         type: "category",
         boundaryGap: true,
         data: [],
       },
-
       yAxis: {
-        beginAtZero: true,
         type: "value",
         min: null,
         max: null,
         boundaryGap: [0, "100%"],
-        // splitLine: {
-        //   show: true,
-        // },
+        name: metricConfigs[props.label]?.unit || "",
       },
-
       series: {
         name: props.label,
         type: "line",
         stack: "Total",
         data: [],
-
-        // markPoint: {
-        //   data: [
-        //     {
-        //       name: "test",
-        //       value: "SS",
-        //       xAxis: 1,
-        //       yAxis: -0.5,
-        //     },
-        //   ],
-        // },
       },
     });
 
-    const manipulateMetrics = () => {
-      option.value.xAxis.data = Object.keys(props.metrics).map((key) =>
+    const updateChartOptions = () => {
+      const metricConfig = metricConfigs[props.label];
+      chartOptions.value.xAxis.data = Object.keys(props.metrics).map((key) =>
         date.formatDate(parseInt(key) * 1000, "hh:mm:ss")
       );
-
-      if (props.label == "Ingest Video Bitrate (kbps)") {
-        option.value.series.data = Object.values(props.metrics).map((value) =>
-          Math.trunc(value / 1024)
-        );
-        option.value.yAxis.min = Math.min(...option.value.series.data);
-        option.value.yAxis.max = Math.max(...option.value.series.data);
-      }
-      if (props.label == "Ingest Audio Bitrate (kbps)") {
-        option.value.series.data = Object.values(props.metrics).map((value) =>
-          Math.trunc(value / 1024)
-        );
-        option.value.yAxis.min = Math.min(...option.value.series.data);
-        option.value.yAxis.max = Math.max(...option.value.series.data);
-      }
-      if (props.label == "Ingest Framerate (fps)") {
-        option.value.series.data = Object.values(props.metrics).map((value) =>
-          Math.trunc(value)
-        );
-        option.value.yAxis.min = Math.min(...option.value.series.data);
-        option.value.yAxis.max = Math.max(...option.value.series.data);
-      }
-      if (props.label == "Keyframe Interval (idr)") {
-        option.value.series.data = Object.values(props.metrics).map((value) =>
-          Math.trunc(value)
-        );
-        option.value.yAxis.min = Math.min(...option.value.series.data);
-        option.value.yAxis.max = Math.max(...option.value.series.data);
-      }
-      if (props.label == "Concurrent Views (count)") {
-        option.value.series.data = Object.values(props.metrics).map((value) =>
-          Math.trunc(value)
-        );
-        option.value.yAxis.min = Math.min(...option.value.series.data);
-        option.value.yAxis.max = Math.max(...option.value.series.data);
-      }
+      chartOptions.value.series.data = Object.values(props.metrics).map(
+        metricConfig?.calculate || ((value) => value)
+      );
+      chartOptions.value.yAxis.min = Math.min(
+        ...chartOptions.value.series.data
+      );
+      chartOptions.value.yAxis.max = Math.max(
+        ...chartOptions.value.series.data
+      );
     };
 
-    onMounted(() => {
-      manipulateMetrics();
-    });
+    watch(metrics, updateChartOptions);
+    onMounted(updateChartOptions);
 
-    return { option };
+    return { chartOptions };
   },
 });
 </script>
