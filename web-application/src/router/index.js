@@ -54,7 +54,7 @@ export default route(async function ({ store }) {
       next();
     } else {
       authStore.isUserSignedIn().then((res) => {
-        console.log("isUserSignedIn res:", res);
+        // console.log("isUserSignedIn res:", res);
         next();
       });
     }

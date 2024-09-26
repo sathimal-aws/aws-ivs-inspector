@@ -23,7 +23,7 @@ export const useAuthStore = defineStore("AuthStore", {
     async isUserSignedIn() {
       try {
         return await getCurrentUser().then(async (userRes) => {
-          console.log("user Response:", userRes);
+          // console.log("user Response:", userRes);
           if (userRes.userId) {
             return await fetchAuthSession().then((fetchAuthSessionRes) => {
               this.accessToken =

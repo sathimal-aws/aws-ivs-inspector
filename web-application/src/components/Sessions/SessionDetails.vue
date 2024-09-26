@@ -250,7 +250,7 @@ export default defineComponent({
     );
 
     const showEventReason = (reason) => {
-      console.log("reason:", reason);
+      // console.log("reason:", reason);
       infoType.value = reason;
       showInformation.value = true;
     };
@@ -263,8 +263,10 @@ export default defineComponent({
 
     watch(sessionDetails, (currentValue, oldValue) => {
       console.log("currentValue:", currentValue);
-      console.log("oldValue:", oldValue);
-      if (currentValue) {
+      // console.log("oldValue:", oldValue);
+      console.log("endTime:", currentValue.endTime);
+
+      if (!currentValue.endTime) {
         console.log("session is live");
         sessionStore.getStream(sessionId, channelArn, awsRegion);
       }
@@ -272,17 +274,17 @@ export default defineComponent({
 
     onMounted(() => {
       if (!sessionDetails.value) {
-        console.log("sessionId:", sessionId);
+        // console.log("sessionId:", sessionId);
         sessionStore
           .getSessionEvents(sessionId, channelArn, awsRegion)
           .then((res) => {
-            console.log(res);
+            // console.log(res);
           });
         if (!sessionDetails.value) {
           sessionStore
             .getSession(sessionId, channelArn, awsRegion)
             .then((res) => {
-              console.log("getSessionRes:", res);
+              // console.log("getSessionRes:", res);
               // console.log(sessionDetails.value);
               // console.log(Object.values(sessionDetails.value));
               // const isSessionLive = computed(() =>
@@ -299,7 +301,7 @@ export default defineComponent({
           sessionStore
             .getIngestMetrics(sessionId, channelId, awsRegion)
             .then((res) => {
-              console.log("getIngestMetricsResponse", res);
+              // console.log("getIngestMetricsResponse", res);
               if (res) metricsLoaded.value = true;
             });
         }

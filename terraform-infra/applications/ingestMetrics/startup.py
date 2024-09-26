@@ -26,7 +26,8 @@ def main(event):
             ConditionExpression="attribute_not_exists(#metricName)",
             ExpressionAttributeNames={"#metricName": event["MetricName"]},
             ExpressionAttributeValues={":value": {}},
-            ReturnValues="UPDATED_NEW",        )
+            ReturnValues="UPDATED_NEW",        
+            )
 
         while True:  # Run indefinitely until the function is stopped or an error occurs
             metrics = cloudwatch_client.get_metric_statistics(

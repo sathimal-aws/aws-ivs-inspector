@@ -232,9 +232,9 @@ def add_stream_end_time(event):
             stream_sessions_table.update_item(
                 Key={"streamId": stream_id, "channelArn": channel_arn},
                 UpdateExpression="set endTime = :endTime",
-                ExpressionAttributeValues={
-                    ":endTime": calendar.timegm(stream_session_end_time)
-                },
+                ConditionExpression="attribute_not_exists(endTime)",
+                ExpressionAttributeValues={":endTime": calendar.timegm(stream_session_end_time)},
+                ReturnValues="UPDATED_NEW",
             )
     except (botocore.exceptions.ClientError, KeyError) as err:
         logger.error(f"Error adding stream end time: {err}")

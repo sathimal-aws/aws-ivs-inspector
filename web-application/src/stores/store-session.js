@@ -19,7 +19,7 @@ export const useSessionStore = defineStore("SessionStore", {
 
   actions: {
     async listStreams(ivsRegion) {
-      console.log("getting live streams", ivsRegion);
+      // console.log("getting live streams", ivsRegion);
       try {
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
@@ -36,10 +36,10 @@ export const useSessionStore = defineStore("SessionStore", {
             },
           }
         );
-        console.log("getSessions response:", response);
+        // console.log("getSessions response:", response);
         if (response.status == 200) {
           response.data?.streams.map((stream) => {
-            console.log(stream);
+            // console.log(stream);
             const channelId = stream.channelArn.split("/")[1];
             stream["channelId"] = channelId;
 
@@ -75,7 +75,7 @@ export const useSessionStore = defineStore("SessionStore", {
 
     async getSession(streamId, channelArn, ivsRegion) {
       try {
-        console.log(streamId, channelArn);
+        // console.log(streamId, channelArn);
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
         );
@@ -117,7 +117,7 @@ export const useSessionStore = defineStore("SessionStore", {
 
     async getStream(streamId, channelArn, ivsRegion) {
       try {
-        console.log(channelArn, streamId, ivsRegion);
+        // console.log(channelArn, streamId, ivsRegion);
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
         );
@@ -160,7 +160,7 @@ export const useSessionStore = defineStore("SessionStore", {
 
     async getIngestMetrics(streamId, channelId, ivsRegion) {
       try {
-        console.log(streamId, channelId);
+        // console.log(streamId, channelId);
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
         );
@@ -178,7 +178,7 @@ export const useSessionStore = defineStore("SessionStore", {
           }
         );
 
-        console.log(response);
+        // console.log(response);
 
         if (response.status == 200) {
           if (!this.sessionMetrics[ivsRegion])
@@ -222,7 +222,7 @@ export const useSessionStore = defineStore("SessionStore", {
 
           ws.onmessage = (event) => {
             const events = JSON.parse(event.data);
-            console.log("events:", events);
+            // console.log("events:", events);
             if (!events.ResponseMetadata && Object.keys(events)) {
               if (!this.sessions[ivsRegion]) {
                 this.sessions[ivsRegion] = {};
@@ -237,7 +237,7 @@ export const useSessionStore = defineStore("SessionStore", {
                   (event) => event.name == "Stream End"
                 ).length
               ) {
-                console.log("isLive");
+                // console.log("isLive");
                 this.sessions[ivsRegion][streamId].isLive = true;
               }
             }

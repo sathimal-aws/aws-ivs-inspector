@@ -22,7 +22,7 @@ def lambda_handler(event, context):
             channelArn=event["queryStringParameters"]["channelArn"],
         )
 
-        logger.info(f"get stream response: {json.dumps(ivsGetStreamResponse, indent=2)}")        
+        logger.info(f"get stream response: {json.dumps(ivsGetStreamResponse, indent=2, default=str)}")        
         return respond(None, json.dumps(ivsGetStreamResponse, default=str))
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
