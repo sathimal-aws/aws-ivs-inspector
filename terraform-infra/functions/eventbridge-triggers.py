@@ -226,14 +226,13 @@ def add_stream_end_time(event):
         ivs_get_stream_session_response = ivs_client.get_stream_session(
             channelArn=channel_arn, streamId=stream_id
         )
-        stream_session_end_time = ivs_get_stream_session_response["streamSession"]["endTime"].timetuple()
+        stream_session_end_time = calendar.timegm(ivs_get_stream_session_response["streamSession"]["endTime"].timetuple())
 
-        if "Item" in ivs_get_stream_session_response:
+        if "streamSession" in ivs_get_stream_session_response:
             stream_sessions_table.update_item(
                 Key={"streamId": stream_id, "channelArn": channel_arn},
                 UpdateExpression="set endTime = :endTime",
-                ConditionExpression="attribute_not_exists(endTime)",
-                ExpressionAttributeValues={":endTime": calendar.timegm(stream_session_end_time)},
+                ExpressionAttributeValues={":endTime": stream_session_end_time},
                 ReturnValues="UPDATED_NEW",
             )
     except (botocore.exceptions.ClientError, KeyError) as err:

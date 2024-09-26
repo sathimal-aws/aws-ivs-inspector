@@ -286,6 +286,7 @@ locals {
           actions = [
             "dynamodb:PutItem",
             "dynamodb:GetItem",
+            "dynamodb:UpdateItem"
           ]
           resources = [
             "arn:aws:dynamodb:${var.region}:${var.account_id}:table/${var.project_name}-stream-sessions",
