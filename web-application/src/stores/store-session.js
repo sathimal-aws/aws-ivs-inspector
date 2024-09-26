@@ -117,7 +117,7 @@ export const useSessionStore = defineStore("SessionStore", {
 
     async getStream(streamId, channelArn, ivsRegion) {
       try {
-        console.log(channelArn, streamId);
+        console.log(channelArn, streamId, ivsRegion);
         const apis = JSON.parse(
           envVars[`VITE_API_${ivsRegion}`].replaceAll("\\", "")
         );
