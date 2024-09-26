@@ -8,6 +8,83 @@ from decimal import Decimal
 logger = logging.getLogger()
 dynamodb = boto3.resource("dynamodb")
 
+# def lambda_handler(event):
+#     print("Received event json: " + json.dumps(event, indent=2, default=str))  # type: ignore
+#     ingestLogsTable = dynamodb.Table(event["DbTableName"])
+#     cloudWatchClient = boto3.client("cloudwatch", region_name=event["RegionName"])
+
+#     isStreamLive = True
+
+#     startTime = event["StartTime"]
+
+#     try:
+#         print("MetricName:", event["MetricName"])
+#         ingestLogsTable.update_item(
+#             Key={
+#                 "streamId": event["StreamId"],
+#                 "channelId": event["ChannelId"],
+#             },
+#             UpdateExpression="set #metricName = :value",
+#             ConditionExpression="attribute_not_exists(#metricName)",
+#             ExpressionAttributeNames={"#metricName": event["MetricName"]},
+#             ExpressionAttributeValues={":value": {}},
+#             ReturnValues="UPDATED_NEW",
+#         )
+#         while isStreamLive:
+#             metrics = cloudWatchClient.get_metric_statistics(
+#                 Namespace="AWS/IVS",
+#                 MetricName=event["MetricName"],
+#                 Dimensions=[
+#                     {"Name": "Channel", "Value": event["ChannelId"]},
+#                 ],
+#                 StartTime=startTime,
+#                 EndTime=datetime.now(),
+#                 Period=int(event["Period"]),
+#                 Statistics=ast.literal_eval(event["Statistics"]),
+#                 Unit=event["Unit"],
+#             )
+
+#             print('metrics["Datapoints"]:', metrics["Datapoints"])
+
+#             if len(metrics["Datapoints"]) > 0:
+#                 sortedDate = sorted(
+#                     metrics["Datapoints"], key=lambda x: x["Timestamp"], reverse=True
+#                 )
+#                 startTime = sortedDate[0]["Timestamp"] - timedelta(minutes=1)
+
+#                 for data in sortedDate:
+#                     ingestLogsTable.update_item(
+#                         Key={
+#                             "streamId": event["StreamId"],
+#                             "channelId": event["ChannelId"],
+#                         },
+#                         UpdateExpression="set #metricName.#eventTime = :metricValues",
+#                         ExpressionAttributeNames={
+#                             "#metricName": event["MetricName"],
+#                             "#eventTime": str(
+#                                 int(datetime.timestamp(data["Timestamp"]))
+#                             ),
+#                         },
+#                         ExpressionAttributeValues={
+#                             ":metricValues": round(Decimal(f'{data["Average"]}'), 3),
+#                         },
+#                         ReturnValues="UPDATED_NEW",
+#                     )
+#             sleep(int(event["EveryNSecond"]))
+
+#     except exceptions.ClientError as err:
+#         logger.error(
+#             "Couldn't add metric %s in table %s. Here's why: %s: %s",
+#             event["MetricName"],
+#             ingestLogsTable,
+#             err.response["Error"]["Code"],
+#             err.response["Error"]["Message"],
+#         )
+#         raise
+
+#     return {
+#         "statusCode": 200,
+#     }
 
 def main(event):
     """Collects and stores ingest metrics from CloudWatch to DynamoDB."""
@@ -22,10 +99,11 @@ def main(event):
         # Create the metric entry in DynamoDB if it doesn't exist
         ingest_logs_table.update_item(
             Key={"streamId": event["StreamId"], "channelId": event["ChannelId"]},
-            UpdateExpression="set #metricName = if_not_exists(#metricName, :emptyMap)",
+            UpdateExpression="set #metricName = :value",
+            ConditionExpression="attribute_not_exists(#metricName)",
             ExpressionAttributeNames={"#metricName": event["MetricName"]},
-            ExpressionAttributeValues={":emptyMap": {}},
-        )
+            ExpressionAttributeValues={":value": {}},
+            ReturnValues="UPDATED_NEW",        )
 
         while True:  # Run indefinitely until the function is stopped or an error occurs
             metrics = cloudwatch_client.get_metric_statistics(
@@ -78,7 +156,6 @@ def main(event):
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         raise  # Re-raise the exception to stop the function execution
-
 
 if __name__ == "__main__":
     main(os.environ)
