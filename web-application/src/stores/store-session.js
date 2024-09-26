@@ -178,7 +178,7 @@ export const useSessionStore = defineStore("SessionStore", {
           }
         );
 
-        // console.log(response);
+        console.log(response);
 
         if (response.status == 200) {
           if (!this.sessionMetrics[ivsRegion])
