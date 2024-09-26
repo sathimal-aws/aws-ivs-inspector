@@ -18,17 +18,21 @@ def respond(err, res=None):
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event, indent=2)}")        
     try:
-        streamSessionsDetails = stream_sessions_table.get_item(
+        data = stream_sessions_table.get_item(
             Key={
                 "streamId": event["queryStringParameters"]["stream_id"],
                 "channelArn": event["queryStringParameters"]["channel_arn"],
             }
         )
         # Check if item exists
-        if 'Item' in streamSessionsDetails:
-            return respond(None, json.dumps(streamSessionsDetails, default=str))
+        if "Item" in data:
+            logger.info(f"Retrieved stream session: {json.dumps(data['Item'], indent=2, default=str)}")
+            return respond(None, json.dumps(data['Item'], default=str))
         else:
-            return respond(None, {}) 
+            print(f"No stream session found for stream ID: {event['queryStringParameters']['stream_id']}")
+            logger.info(f"No stream session found for stream ID: {event['queryStringParameters']['stream_id']}")
+            return respond(None, json.dumps({}, default=str))  # Return an empty dictionary if no item is found
+
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         return respond(e) 

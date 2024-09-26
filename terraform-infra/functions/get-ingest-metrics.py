@@ -33,8 +33,8 @@ def lambda_handler(event, context):
             return respond(None, json.dumps(data['Item'], default=str))
         else:
             logger.info(f"No ingest metrics found for stream ID: {event['queryStringParameters']['stream_id']} and channel ID: {event['queryStringParameters']['channel_id']}")
-            return respond(None, {})  # Return an empty dictionary if no item is found
+            return respond(None, json.dumps({}, default=str))  # Return an empty dictionary if no item is found
 
     except Exception as e:
         logger.error(f"Error fetching ingest metrics: {str(e)}")
-        return respond(e)
+        return respond(json.dumps(e, default=str))

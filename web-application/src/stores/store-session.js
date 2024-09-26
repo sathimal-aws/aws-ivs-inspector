@@ -178,7 +178,7 @@ export const useSessionStore = defineStore("SessionStore", {
           }
         );
 
-        // console.log(response);
+        console.log("ingest metrics response: ", response);
 
         if (response.status == 200) {
           if (!this.sessionMetrics[ivsRegion])
@@ -351,7 +351,7 @@ export const useSessionStore = defineStore("SessionStore", {
             Notify.create({
               color: "negative",
               position: "top",
-              message: "Getting session details failed",
+              message: "Getting quota provisioned failed",
               icon: "report_problem",
             });
           });

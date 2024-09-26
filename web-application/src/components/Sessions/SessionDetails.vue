@@ -266,7 +266,7 @@ export default defineComponent({
       // console.log("oldValue:", oldValue);
       console.log("endTime:", currentValue.endTime);
 
-      if (!currentValue.endTime) {
+      if (currentValue.startTime && !currentValue.endTime) {
         console.log("session is live");
         sessionStore.getStream(sessionId, channelArn, awsRegion);
       }
@@ -285,16 +285,6 @@ export default defineComponent({
             .getSession(sessionId, channelArn, awsRegion)
             .then((res) => {
               // console.log("getSessionRes:", res);
-              // console.log(sessionDetails.value);
-              // console.log(Object.values(sessionDetails.value));
-              // const isSessionLive = computed(() =>
-              //   Object.values(sessionDetails.value.events)
-              // );
-              // console.log(isSessionLive.value);
-              // if (res && !sessionDetails.value.events?.["Stream End"]) {
-              //   console.log("getting live stream data");
-              //   sessionStore.getStream(sessionId, channelArn, awsRegion);
-              // }
             });
         }
         if (!sessionMetrics.value) {
