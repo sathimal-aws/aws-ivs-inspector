@@ -1,0 +1,166 @@
+name: 01:AWS Amplify App
+
+on: workflow_dispatch
+
+env:
+  TF_VAR_region: ${{ vars.AWS_AMPLIFY_DEPLOYED_REGION }}
+  TF_VAR_project_name: ${{ vars.IVS_PROJECT_NAME }}
+  TF_VAR_repository: ${{ github.server_url }}/${{ github.repository }}
+  TF_VAR_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_S3_BUCKET_FOR_TF_STATE: ${{ secrets.AWS_S3_BUCKET_FOR_TF_STATE }}
+  AWS_S3_BUCKET_FOR_TF_STATE_REGION: ${{ vars.AWS_S3_BUCKET_FOR_TF_STATE_REGION }}
+  AWS_AMPLIFY_APP_ID: ${{ vars.AWS_AMPLIFY_APP_ID }}
+  AWS_AMPLIFY_APP_REGION: ${{ vars.AWS_AMPLIFY_DEPLOYED_REGION }}
+  GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+  envVarsPath: ./web-application/.env
+  TF_LOG: ERROR
+
+jobs:
+  terraform_for_amplify:
+    runs-on: ubuntu-latest
+    environment: ivs_inspector_backend
+
+    steps:
+      - name: Checkout the repository to the runner
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform with specific version on the runner
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform Init
+        id: init
+        run: |
+          cd terraform-amplify
+          terraform fmt
+          terraform init \
+           -backend-config="bucket=$AWS_S3_BUCKET_FOR_TF_STATE" \
+           -backend-config="key=amplify/$TF_VAR_region/terraform.tfstate" \
+           -backend-config="region=$AWS_S3_BUCKET_FOR_TF_STATE_REGION" \
+
+      - name: Terraform Validate
+        id: validate
+        run: |
+          cd terraform-amplify
+          terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          cd terraform-amplify
+          terraform plan -no-color -input=false
+        continue-on-error: true
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          cd terraform-amplify
+          terraform apply -auto-approve -input=false
+
+      - name: Terraform Output
+        id: output
+        run: |
+          cd terraform-amplify
+          echo "amplify_app_id=$(terraform output -raw amplify_app_id)" >> $GITHUB_OUTPUT
+          echo "cognito_user_pool_id=$(terraform output -raw cognito_user_pool_id)" >> $GITHUB_OUTPUT
+          echo "cognito_identity_pool_id=$(terraform output -raw cognito_identity_pool_id)" >> $GITHUB_OUTPUT
+          echo "cognito_ids=$(terraform output -json cognito_ids)" >> $GITHUB_OUTPUT
+
+    outputs:
+      amplify_app_id: ${{ steps.output.outputs.amplify_app_id }}
+      cognito_user_pool_id: ${{ steps.output.outputs.cognito_user_pool_id }}
+      cognito_identity_pool_id: ${{ steps.output.outputs.cognito_identity_pool_id }}
+      cognito_ids: ${{ steps.output.outputs.cognito_ids }}
+
+  adding_environment_variable:
+    name: "Adding Amplify App ID into GH Env Var"
+    runs-on: ubuntu-latest
+    environment: ivs_inspector_backend
+    needs: terraform_for_amplify
+    steps:
+      - name: Checkout the repository to the runner
+        uses: actions/checkout@v4
+
+      - name: "add to github env variable"
+        run: |
+          echo "cognito_ids:: ${{ needs.terraform_for_amplify.outputs.cognito_ids }}"
+          echo "app_id:: ${{ needs.terraform_for_amplify.outputs.amplify_app_id }}"
+          gh variable set AWS_AMPLIFY_APP_ID --body "${{ needs.terraform_for_amplify.outputs.amplify_app_id }}" --env ivs_inspector_backend
+          gh variable set AWS_COGNITO_USER_POOL_ID --body "${{ needs.terraform_for_amplify.outputs.cognito_user_pool_id }}" --env ivs_inspector_backend
+          gh variable set AWS_COGNITO_IDENTITY_POOL_ID --body "${{ needs.terraform_for_amplify.outputs.cognito_identity_pool_id }}" --env ivs_inspector_backend
+    outputs:
+      amplify_app_id: ${{ needs.terraform_for_amplify.outputs.amplify_app_id }}
+      cognito_ids: ${{ needs.terraform_for_amplify.outputs.cognito_ids }}
+
+  update_amplify_env_vars:
+    name: "Adding API IDs into Amplify Env Var"
+    runs-on: ubuntu-latest
+    environment: ivs_inspector_backend
+    needs: adding_environment_variable
+    steps:
+      - name: Checkout the repositoring to the runner
+        uses: actions/checkout@v4
+
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set region $AWS_AMPLIFY_APP_REGION
+
+      - name: Setup Python Version
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9 # Install the python version needed
+
+      - name: Execute Python script # Run the manipulate_cognito_vars.py file to manipulate the json
+        run: |
+          current_env_vars=$(aws amplify get-app --app-id "${{ needs.adding_environment_variable.outputs.amplify_app_id }}" | jq '.app.environmentVariables')
+          cognito_vars=$(jq '.' <<< "${{ needs.adding_environment_variable.outputs.cognito_ids }}")
+          final_env_var=$(python3 ./workflow-scripts/manipulate_cognito_vars.py "$current_env_vars" "$cognito_vars")
+          aws amplify update-app --app-id "${{ needs.adding_environment_variable.outputs.amplify_app_id }}" --environment-variables "$final_env_var"
+
+  generating_webapp_repo_env_vars:
+    name: "generating .env in repo"
+    runs-on: ubuntu-latest
+    environment: ivs_inspector_backend
+    needs: update_amplify_env_vars
+    steps:
+      - name: Checkout the repositoring to the runner
+        uses: actions/checkout@v4
+
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set region $AWS_AMPLIFY_APP_REGION
+
+      - name: Setup Python Version
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9 # Install the python version needed
+
+      - name: Execute Python script # Run the manipulate_apis_vars.py file to manipulate the json
+        run: |
+          pip install python-dotenv
+          current_env_vars=$(aws amplify get-app --app-id $AWS_AMPLIFY_APP_ID | jq '.app.environmentVariables')
+          python3 ./workflow-scripts/generate.env.py "$current_env_vars"
+          pwd
+          ls -la
+          mv ./.env $envVarsPath
+
+      - name: Git Commit
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -f $envVarsPath
+          git commit --allow-empty -m "adding environment variables for localhost access"
+
+      - name: Git Push
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          force: true

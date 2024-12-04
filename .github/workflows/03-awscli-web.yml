@@ -1,0 +1,26 @@
+name: 03:AWS IVS Inspector web-app
+
+on: workflow_dispatch
+
+env:
+  TF_VAR_region: ${{ vars.AWS_AMPLIFY_DEPLOYED_REGION }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_AMPLIFY_APP_ID: ${{ vars.AWS_AMPLIFY_APP_ID}}
+  TF_LOG: INFO
+
+jobs:
+  web-app:
+    runs-on: ubuntu-latest
+    environment: ivs_inspector_backend
+
+    steps:
+      - name: Checkout the repositoring to the runner
+        uses: actions/checkout@v4
+
+      - name: Build Amplify App
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set region "$TF_VAR_region"
+          aws amplify start-job --app-id $AWS_AMPLIFY_APP_ID --branch-name ${{ github.ref_name }} --job-type RELEASE --commit-message "commit from GitHub"

@@ -1,0 +1,42 @@
+{
+  "name": "aws-ivs-inspector",
+  "version": "0.0.1",
+  "description": "AWS IVS Inspector",
+  "productName": "aws-ivs-inspector",
+  "author": "Sathia Saithanya <39732245+sathia-s@users.noreply.github.com>",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --ext .js,.vue ./",
+    "format": "prettier --write \"**/*.{js,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"No test specified\" && exit 0",
+    "dev": "quasar dev",
+    "build": "quasar build"
+  },
+  "dependencies": {
+    "@aws-amplify/ui-vue": "^4.2.6",
+    "@quasar/extras": "^1.16.4",
+    "aws-amplify": "^6.3.0",
+    "aws-sdk": "^2.1546.0",
+    "axios": "^1.2.1",
+    "echarts": "^5.4.3",
+    "pinia": "^2.0.11",
+    "quasar": "^2.8.0",
+    "vue": "^3.2.29",
+    "vue-echarts": "^6.6.8",
+    "vue-router": "^4.0.12"
+  },
+  "devDependencies": {
+    "@quasar/app-vite": "^1.4.3",
+    "@types/node": "^20.11.13",
+    "autoprefixer": "^10.4.2",
+    "eslint": "^8.11.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "postcss": "^8.4.14"
+  },
+  "engines": {
+    "node": "^20 || ^18 || ^16",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}

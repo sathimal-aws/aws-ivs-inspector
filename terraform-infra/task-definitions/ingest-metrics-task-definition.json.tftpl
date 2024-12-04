@@ -1,0 +1,26 @@
+[
+  {
+    "name": "${project_name}-ingest-metrics-container",
+    "image": "${account_id}.dkr.ecr.${region}.amazonaws.com/${project_name}-ingest-metrics:latest",
+    "cpu": ${fargate_cpu},
+    "memory": ${fargate_memory},
+    "portMappings": [
+      {
+        "containerPort": 3000,
+        "hostPort": 3000,
+        "protocol": "tcp"
+      }
+    ],
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-create-group": "true",
+        "awslogs-group": "/aws/ecs/${project_name}-${region}-ingest-metrics",
+        "awslogs-region": "${region}",
+        "awslogs-stream-prefix": "ecs"
+      },
+      "secretOptions": []
+    }
+  }
+]

@@ -1,0 +1,44 @@
+name: 04:AWS Infra destroy
+
+on: workflow_dispatch
+
+env:
+  TF_VAR_region: "ap-south-1"
+  TF_VAR_repository: ${{ github.server_url }}/${{ github.repository }}
+  TF_VAR_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_S3_BUCKET_FOR_TF_STATE: ${{ secrets.AWS_S3_BUCKET_FOR_TF_STATE }}
+  AWS_S3_BUCKET_FOR_TF_STATE_REGION: ${{ vars.AWS_S3_BUCKET_FOR_TF_STATE_REGION }}
+  TF_LOG: INFO
+
+jobs:
+  terraform_for_infra:
+    runs-on: ubuntu-latest
+    environment: ivs_inspector_backend
+
+    steps:
+      - name: Checkout the repository to the runner
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform with specific version on the runner
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform Init
+        id: init
+        run: |
+          cd terraform-infra
+          terraform fmt
+          terraform init \
+           -backend-config="bucket=$AWS_S3_BUCKET_FOR_TF_STATE" \
+           -backend-config="key=infra/$TF_VAR_region/terraform.tfstate" \
+           -backend-config="region=$AWS_S3_BUCKET_FOR_TF_STATE_REGION" \
+           -reconfigure
+
+      - name: Terraform Destroy
+        id: destroy
+        run: |
+          cd terraform-infra
+          terraform destroy -auto-approve -input=false
