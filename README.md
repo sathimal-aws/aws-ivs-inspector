@@ -14,11 +14,11 @@ Wiki: [Link to the Prerequisites](https://github.com/sathimal-aws/aws-ivs-inspec
 
 #### Deployment
 
-Wiki: [Link to the Prerequisites](https://github.com/sathimal-aws/aws-ivs-inspector/wiki/02:-Backend-Infrastructure-Deployment)
+Wiki: [Link to the Deployment](https://github.com/sathimal-aws/aws-ivs-inspector/wiki/02:-Backend-Infrastructure-Deployment)
 
 ## Accessing the Web Application
 
-Wiki: [Link to the Prerequisites](https://github.com/sathimal-aws/aws-ivs-inspector/wiki/03:-Accessing-the-Web-Application)
+Wiki: [Link to the Web Application Access](https://github.com/sathimal-aws/aws-ivs-inspector/wiki/03:-Accessing-the-Web-Application)
 
 <!-- 1. After all workflows complete successfully, go to the AWS console.
 2. Navigate to the Amplify service in the region where you deployed your application.
