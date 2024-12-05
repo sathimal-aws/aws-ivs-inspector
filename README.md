@@ -14,9 +14,13 @@ Wiki: [Link to the Prerequisites](https://github.com/sathimal-aws/aws-ivs-inspec
 
 #### Deployment
 
+:TODO: Add short description
+
 Wiki: [Link to the Deployment](https://github.com/sathimal-aws/aws-ivs-inspector/wiki/02:-Backend-Infrastructure-Deployment)
 
 ## Accessing the Web Application
+
+:TODO: Add short description
 
 Wiki: [Link to the Web Application Access](https://github.com/sathimal-aws/aws-ivs-inspector/wiki/03:-Accessing-the-Web-Application)
 
